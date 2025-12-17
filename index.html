@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>This Year's Chiristmas Tree (2025 version)</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        overscroll-behavior: none;
+        background-color: white;
+        height: 100dvh; 
+        width: 100vw;
+      }
+      h1, h2, h3, .serif {
+        font-family: 'DM Serif Display', serif;
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .btn-close:hover {
+        transform: rotate(90deg);
+      }
+    </style>
+</head>
+<body class="bg-white text-black selection:bg-green-200"> <div id="root" class="h-full"></div>
+
+    <script>
+        const { useState, useEffect, useRef, useCallback } = React;
+        const ReactDOM = window.ReactDOM;
+        const e = React.createElement; 
+        
+        const { 
+            Engine, 
+            Runner, 
+            World, 
+            Bodies, 
+            Body, 
+            Events,
+            Composite 
+        } = Matter;
+
+        // --- Supabase 配置 ---
+        const SUPABASE_URL = "https://rhoojefaverkibdihttg.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJob29qZWZhdmVya2liZGlodHRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NzI4MTMsImV4cCI6MjA4MTQ0ODgxM30.MYYRt1g7c5WmkxRN0lb4jhxdt1trNbmDjPKO5y0leEM";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- Icon Components 
+        const ICON_SIZE = "40"; 
+
+        const IconPlus = (props) => (
+            e('svg', { width: ICON_SIZE, height: ICON_SIZE, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('line', { x1: "12", y1: "5", x2: "12", y2: "19" }),
+                e('line', { x1: "5", y1: "12", x2: "19", y2: "12" })
+            )
+        );
+
+        const IconUndo = (props) => (
+            e('svg', { width: ICON_SIZE, height: ICON_SIZE, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('path', { d: "M3 7v6h6" }),
+                e('path', { d: "M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" })
+            )
+        );
+
+        const IconStar = ({ className, ...props }) => (
+            e('svg', { className: className, width: ICON_SIZE, height: ICON_SIZE, viewBox: "0 0 24 24", fill: "currentColor", stroke: "none", ...props },
+                e('polygon', { points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" })
+            )
+        );
+
+        const IconArrowLeft = (props) => (
+            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('line', { x1: "19", y1: "12", x2: "5", y2: "12" }),
+                e('polyline', { points: "12 19 5 12 12 5" })
+            )
+        );
+
+        const IconArrowRight = (props) => (
+            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('line', { x1: "5", y1: "12", x2: "19", y2: "12" }),
+                e('polyline', { points: "12 5 19 12 12 19" })
+            )
+        );
+
+        const IconRotate = (props) => (
+            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('path', { d: "M21.5 2v6h-6" }),
+                e('path', { d: "M21.34 15.57a10 10 0 1 1-.57-8.38" })
+            )
+        );
+        
+        const IconSphere = (props) => (
+            e('svg', { width: ICON_SIZE, height: ICON_SIZE, viewBox: "0 0 24 24", fill: "currentColor", stroke: "none", ...props },
+                e('circle', { cx: "12", cy: "12", r: "10" }) 
+            )
+        );
+
+        const IconTrash = (props) => (
+            e('svg', { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('polyline', { points: "3 6 5 6 21 6" }),
+                e('path', { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })
+            )
+        );
+
+        const IconMove = (props) => (
+            e('svg', { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+                e('polyline', { points: "5 9 2 12 5 15" }),
+                e('polyline', { points: "9 5 12 2 15 5" }),
+                e('polyline', { points: "15 19 12 22 9 19" }),
+                e('polyline', { points: "19 15 22 12 19 9" }),
+                e('line', { x1: "2", y1: "12", x2: "22", y2: "12" }),
+                e('line', { x1: "12", y1: "2", x2: "12", y2: "22" })
+            )
+        );
+
+        // --- Helper Function: Draw Star
+        const drawStarFixed = (ctx, radius, color) => {
+            const outerRadius = radius;
+            const innerRadius = radius * 0.45; 
+            const points = 5;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            for (let i = 0; i < points; i++) {
+                const outerAngle = Math.PI / 2 - (i * 2 * Math.PI / points);
+                const outerX = outerRadius * Math.cos(outerAngle);
+                const outerY = -outerRadius * Math.sin(outerAngle); 
+                if (i === 0) ctx.moveTo(outerX, outerY);
+                else ctx.lineTo(outerX, outerY);
+                const innerAngle = Math.PI / 2 - (i * 2 * Math.PI / points) - (Math.PI / points);
+                const innerX = innerRadius * Math.cos(innerAngle);
+                const innerY = -innerRadius * Math.sin(innerAngle);
+                ctx.lineTo(innerX, innerY);
+            }
+            ctx.closePath();
+            ctx.fill();
+        };
+
+        // --- TracingModal (No Change) ---
+        const TracingModal = ({ imageSrc, onConfirm, onCancel }) => {
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const imgRef = useRef(null);
+            const rectRef = useRef(null);
+            const dprRef = useRef(1);
+            const tempPointsRef = useRef([]); 
+            const isDrawingRef = useRef(false);
+            const animationFrameRef = useRef(null);
+            const lastPointRef = useRef(null);
+            const [pointsCount, setPointsCount] = useState(0); 
+            const MIN_DISTANCE_SQ = 25; 
+            const LINE_WIDTH = 30;
+
+            const drawLoop = useCallback(() => {
+                const cvs = canvasRef.current;
+                const ctx = cvs?.getContext('2d');
+                const points = tempPointsRef.current; 
+
+                if (!ctx || !cvs || !imgRef.current) {
+                    animationFrameRef.current = requestAnimationFrame(drawLoop);
+                    return;
+                }
+
+                const dpr = dprRef.current;
+                const logicalW = cvs.width / dpr;
+                const logicalH = cvs.height / dpr;
+
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
+                ctx.clearRect(0, 0, logicalW, logicalH); 
+                ctx.drawImage(imgRef.current, 0, 0, logicalW, logicalH);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, logicalW, logicalH);
+                
+                if (points.length > 1) {
+                    ctx.strokeStyle = '#22c55e'; 
+                    ctx.lineWidth = LINE_WIDTH; 
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x, points[0].y);
+                    for (let i = 1; i < points.length; i++) {
+                        ctx.lineTo(points[i].x, points[i].y);
+                    }
+                    ctx.stroke();
+                    ctx.fillStyle = '#22c55e'; 
+                    ctx.beginPath();
+                    ctx.arc(points[0].x, points[0].y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = isDrawingRef.current ? '#ef4444' : '#22c55e';
+                    ctx.beginPath();
+                    ctx.arc(points[points.length - 1].x, points[points.length - 1].y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                animationFrameRef.current = requestAnimationFrame(drawLoop);
+            }, []); 
+
+            useEffect(() => {
+                animationFrameRef.current = requestAnimationFrame(drawLoop);
+                return () => {
+                    if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+                };
+            }, [drawLoop]);
+
+            useEffect(() => {
+                dprRef.current = window.devicePixelRatio || 1;
+                const img = new Image();
+                img.src = imageSrc;
+                img.onload = () => {
+                    imgRef.current = img;
+                    if (canvasRef.current && containerRef.current) {
+                        const cvs = canvasRef.current;
+                        const container = containerRef.current;
+                        const dpr = dprRef.current;
+                        const contRect = container.getBoundingClientRect();
+                        const aspect = img.width / img.height;
+                        let drawLogicalW = contRect.width;
+                        let drawLogicalH = drawLogicalW / aspect;
+                        if (drawLogicalH > contRect.height) {
+                            drawLogicalH = contRect.height;
+                            drawLogicalW = drawLogicalH * aspect;
+                        }
+                        cvs.width = drawLogicalW * dpr;
+                        cvs.height = drawLogicalH * dpr;
+                        cvs.style.width = `${drawLogicalW}px`;
+                        cvs.style.height = `${drawLogicalH}px`;
+                        rectRef.current = cvs.getBoundingClientRect();
+                    }
+                };
+                const updateRect = () => { if (canvasRef.current) rectRef.current = canvasRef.current.getBoundingClientRect(); }
+                window.addEventListener('resize', updateRect);
+                window.addEventListener('scroll', updateRect);
+                return () => {
+                    window.removeEventListener('resize', updateRect);
+                    window.removeEventListener('scroll', updateRect);
+                }
+            }, [imageSrc]);
+
+            const getPosLogical = (e) => {
+                if (!rectRef.current) return { x: 0, y: 0 };
+                const rect = rectRef.current;
+                const event = ('touches' in e && e.touches.length > 0) ? e.touches[0] : 
+                              ('changedTouches' in e && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
+                return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+            };
+
+            const throttleTimerRef = useRef(null);
+
+            const startDraw = (e) => {
+                if(e.cancelable) e.preventDefault(); 
+                if (canvasRef.current) rectRef.current = canvasRef.current.getBoundingClientRect();
+                isDrawingRef.current = true;
+                const p = getPosLogical(e);
+                tempPointsRef.current = [p];
+                lastPointRef.current = p;
+                setPointsCount(1); 
+            };
+
+            const updateDraw = (e) => {
+                if (!isDrawingRef.current || !canvasRef.current) return;
+                if(e.cancelable) e.preventDefault();
+                const currentP = getPosLogical(e);
+                const lastP = lastPointRef.current;
+                if (!lastP) {
+                    lastPointRef.current = currentP;
+                    tempPointsRef.current.push(currentP);
+                    setPointsCount(tempPointsRef.current.length);
+                    return;
+                }
+                const dx = currentP.x - lastP.x;
+                const dy = currentP.y - lastP.y;
+                if (dx * dx + dy * dy >= MIN_DISTANCE_SQ) {
+                    tempPointsRef.current.push(currentP);
+                    lastPointRef.current = currentP;
+                    if (!throttleTimerRef.current) {
+                        throttleTimerRef.current = setTimeout(() => {
+                            setPointsCount(tempPointsRef.current.length);
+                            throttleTimerRef.current = null;
+                        }, 100);
+                    }
+                }
+            };
+
+            const endDraw = () => {
+                if (!isDrawingRef.current) return;
+                isDrawingRef.current = false;
+                lastPointRef.current = null;
+                setPointsCount(tempPointsRef.current.length);
+                if (throttleTimerRef.current) {
+                    clearTimeout(throttleTimerRef.current);
+                    throttleTimerRef.current = null;
+                }
+            };
+
+            const handleReset = () => {
+                tempPointsRef.current = [];
+                setPointsCount(0);
+                isDrawingRef.current = false;
+                lastPointRef.current = null;
+            };
+
+            const handleFinish = () => {
+                const pts = tempPointsRef.current;
+                if (pts.length < 3 || !canvasRef.current || !imgRef.current) {
+                    alert('Please draw a valid outline (at least 3 points required).');
+                    return;
+                }
+                const dpr = dprRef.current;
+                const img = imgRef.current;
+                const cvs = canvasRef.current;
+                const imgLogicalW = cvs.width / dpr; 
+                const scaleFactor = img.width / imgLogicalW; 
+                const scaledLineWidth = LINE_WIDTH * scaleFactor;
+
+                const maskCvs = document.createElement('canvas');
+                maskCvs.width = img.width;
+                maskCvs.height = img.height;
+                const maskCtx = maskCvs.getContext('2d');
+                if (!maskCtx) return;
+                
+                maskCtx.beginPath();
+                const startPoint = { x: pts[0].x * scaleFactor, y: pts[0].y * scaleFactor };
+                maskCtx.moveTo(startPoint.x, startPoint.y);
+                for (let i = 1; i < pts.length; i++) {
+                    maskCtx.lineTo(pts[i].x * scaleFactor, pts[i].y * scaleFactor);
+                }
+                maskCtx.closePath();
+
+                maskCtx.save(); 
+                maskCtx.clip();
+                maskCtx.drawImage(img, 0, 0);
+                maskCtx.restore(); 
+
+                maskCtx.strokeStyle = '#22c55e'; 
+                maskCtx.lineWidth = scaledLineWidth; 
+                maskCtx.lineJoin = 'round';
+                maskCtx.lineCap = 'round';
+                maskCtx.beginPath();
+                maskCtx.moveTo(startPoint.x, startPoint.y);
+                for (let i = 1; i < pts.length; i++) {
+                    maskCtx.lineTo(pts[i].x * scaleFactor, pts[i].y * scaleFactor);
+                }
+                maskCtx.closePath();
+                maskCtx.stroke(); 
+
+                let minX = img.width, minY = img.height, maxX = 0, maxY = 0;
+                pts.forEach(p => {
+                    const scaledX = p.x * scaleFactor;
+                    const scaledY = p.y * scaleFactor;
+                    minX = Math.min(minX, scaledX);
+                    minY = Math.min(minY, scaledY);
+                    maxX = Math.max(maxX, scaledX);
+                    maxY = Math.max(maxY, scaledY);
+                });
+                const padding = scaledLineWidth / 2 + 5; 
+                minX = Math.max(0, minX - padding);
+                minY = Math.max(0, minY - padding);
+                maxX = Math.min(img.width, maxX + padding);
+                maxY = Math.min(img.height, maxY + padding);
+                
+                const cropW = maxX - minX;
+                const cropH = maxY - minY;
+                const resCvs = document.createElement('canvas');
+                resCvs.width = cropW;
+                resCvs.height = cropH;
+                const resCtx = resCvs.getContext('2d');
+                if (!resCtx) return;
+                resCtx.drawImage(maskCvs, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
+                onConfirm(resCvs.toDataURL());
+            };
+
+            return (
+                e('div', { className: "fixed inset-0 z-[9999] bg-black/90 flex flex-col items-center justify-center p-4" },
+                    e('div', { className: "text-white text-xl serif mb-4 text-center" }, 
+                        "Outline the Subject",
+                        e('div', { className: "text-sm font-sans mt-1 text-gray-300" }, "Draw a continuous line around the object.")
+                    ),
+                    e('div', { ref: containerRef, className: "relative w-full max-w-lg h-[60vh] flex items-center justify-content bg-gray-900 rounded-lg overflow-hidden border border-gray-700" },
+                        e('canvas', { 
+                            ref: canvasRef,
+                            className: "touch-none cursor-crosshair block",
+                            onMouseDown: startDraw,
+                            onMouseMove: updateDraw,
+                            onMouseUp: endDraw,
+                            onMouseLeave: endDraw,
+                            onTouchStart: startDraw,
+                            onTouchMove: updateDraw,
+                            onTouchEnd: endDraw,
+                        })
+                    ),
+                    e('div', { className: "flex gap-4 mt-6 items-center" },
+                        e('button', { onClick: onCancel, className: "px-6 py-2 rounded-full border border-white text-white hover:bg-white hover:text-black transition focus:outline-none" }, "Cancel"),
+                        e('button', { 
+                            onClick: handleReset, 
+                            title: "Reset Drawing",
+                            className: "px-4 py-2 rounded-full border border-white text-white hover:bg-red-500 hover:border-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none",
+                            disabled: pointsCount === 0 
+                        }, e(IconUndo, { width: 24, height: 24 })),
+                        e('button', { onClick: handleFinish, className: "px-6 py-2 rounded-full bg-[#22c55e] text-white font-bold hover:bg-green-600 transition focus:outline-none", disabled: pointsCount < 3 }, "Use Outline")
+                    )
+                )
+            );
+        };
+
+        // --- FinalPoster (修正版：修复元素不显示问题并添加手写功能) ---
+        const FinalPoster = ({ pieces, containerWidth, containerHeight, onClose, onNewTree, onSendToForest }) => {
+            const canvasRef = useRef(null);        // 树木层
+            const drawingCanvasRef = useRef(null); // 手写层
+            const [isDrawing, setIsDrawing] = useState(false);
+            const dpr = window.devicePixelRatio || 1;
+
+            // 辅助：绘制预览画面
+            const renderPreview = () => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                const ctx = canvas.getContext('2d');
+                
+                // 设置缩放
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                
+                // 1. 预览时绘制浅灰色背景
+                ctx.fillStyle = '#f3f4f6'; // Tailwind gray-100
+                ctx.fillRect(0, 0, containerWidth, containerHeight);
+                
+                // 2. 绘制所有装饰品和树
+                pieces.forEach(piece => {
+                    const { body, img, width, height } = piece;
+                    if (!body) return;
+
+                    ctx.save();
+                    ctx.translate(body.position.x, body.position.y);
+                    ctx.rotate(body.angle);
+                    
+                    if (img && img.complete && img.naturalWidth !== 0) {
+                        ctx.drawImage(img, -width / 2, -height / 2, width, height);
+                    } else {
+                        // 回退方案：如果图片没加载好，画个色块
+                        ctx.fillStyle = body.label === 'Star' ? '#ef4444' : '#22c55e';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, width / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                });
+            };
+
+            // 初始化 Canvas 大小并渲染
+            useEffect(() => {
+                if (canvasRef.current && drawingCanvasRef.current) {
+                    [canvasRef.current, drawingCanvasRef.current].forEach(cvs => {
+                        cvs.width = containerWidth * dpr;
+                        cvs.height = containerHeight * dpr;
+                    });
+                    renderPreview();
+                }
+            }, [pieces, containerWidth, containerHeight]);
+
+            // --- 绘图逻辑 ---
+            const getMousePos = (e) => {
+                const rect = drawingCanvasRef.current.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: (clientX - rect.left) * (drawingCanvasRef.current.width / rect.width),
+                    y: (clientY - rect.top) * (drawingCanvasRef.current.height / rect.height)
+                };
+            };
+
+            const startDrawing = (e) => {
+                const pos = getMousePos(e);
+                const ctx = drawingCanvasRef.current.getContext('2d');
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                setIsDrawing(true);
+            };
+
+            const draw = (e) => {
+                if (!isDrawing) return;
+                const pos = getMousePos(e);
+                const ctx = drawingCanvasRef.current.getContext('2d');
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = '#374151'; // 深灰色画笔
+                ctx.lineWidth = 3 * dpr;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.stroke();
+            };
+
+            // --- 合成导出 ---
+            const exportImage = (withBg) => {
+                const tempCvs = document.createElement('canvas');
+                tempCvs.width = containerWidth * dpr;
+                tempCvs.height = containerHeight * dpr;
+                const tempCtx = tempCvs.getContext('2d');
+
+                if (withBg) {
+                    tempCtx.fillStyle = '#f3f4f6';
+                    tempCtx.fillRect(0, 0, tempCvs.width, tempCvs.height);
+                }
+
+                // 重点：重新绘制树（不带背景）
+                pieces.forEach(piece => {
+                    const { body, img, width, height } = piece;
+                    tempCtx.save();
+                    tempCtx.translate(body.position.x * dpr, body.position.y * dpr);
+                    tempCtx.rotate(body.angle);
+                    if (img) tempCtx.drawImage(img, (-width / 2) * dpr, (-height / 2) * dpr, width * dpr, height * dpr);
+                    tempCtx.restore();
+                });
+
+                // 叠加用户涂鸦层
+                tempCtx.drawImage(drawingCanvasRef.current, 0, 0);
+                return tempCvs.toDataURL('image/png');
+            };
+
+            return (
+                e('div', { className: "fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4" },
+                    e('div', { className: "bg-white p-4 max-w-lg w-full shadow-2xl relative flex flex-col" },
+                        e('button', { onClick: onClose, className: "absolute -top-10 right-0 text-white text-3xl" }, "×"),
+                        
+                        e('div', { className: "mb-2 text-center text-xs font-bold text-gray-400 uppercase tracking-widest" }, "Draw something to decorate!"),
+
+                        // Canvas 容器
+                        e('div', { 
+                            className: "relative bg-gray-100",
+                            style: { 
+                                width: '100%', 
+                                aspectRatio: `${containerWidth}/${containerHeight}`,
+                                touchAction: 'none' 
+                            }
+                        }, 
+                             e('canvas', { ref: canvasRef, className: "absolute inset-0 w-full h-full" }),
+                             e('canvas', { 
+                                ref: drawingCanvasRef, 
+                                className: "absolute inset-0 w-full h-full cursor-crosshair",
+                                onMouseDown: startDrawing,
+                                onMouseMove: draw,
+                                onMouseUp: () => setIsDrawing(false),
+                                onMouseLeave: () => setIsDrawing(false),
+                                onTouchStart: startDrawing,
+                                onTouchMove: draw,
+                                onTouchEnd: () => setIsDrawing(false)
+                             })
+                        ),
+
+                        e('div', { className: "mt-4 flex flex-wrap gap-2 justify-center" },
+                             e('button', { 
+                                 onClick: () => {
+                                     const ctx = drawingCanvasRef.current.getContext('2d');
+                                     ctx.clearRect(0, 0, drawingCanvasRef.current.width, drawingCanvasRef.current.height);
+                                 },
+                                 className: "px-4 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none" 
+                             }, "Redraw"),
+                             e('button', { 
+                                 onClick: () => {
+                                     const link = document.createElement('a');
+                                     link.href = exportImage(true);
+                                     link.download = 'ThisYearsChristmasTree.png';
+                                     link.click();
+                                 },
+                                 className: "px-6 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none"
+                             }, "Download"),
+                             e('button', { 
+                                 onClick: () => onSendToForest(exportImage(false), containerWidth, containerHeight),
+                                 className: "px-4 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none"
+                             }, "Send to Forest")
+                        )
+                    )
+                )
+            );
+        };
+
+        // --- LandingPage ---
+        const LandingPage = ({ isDesktop, isBTT }) => {
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const bodiesRef = useRef([]); 
+            
+            // 🚀 MODIFICATION 1: KEYWORDS 
+            const KEYWORDS = [
+                "Unnecessary Patience", "Fights with Gemini", "For Fun", "Overthinking", 
+                "Random Ideas", "Process-Driven","Why Not","Figma","Code",
+                "Love", "Hope", "2025", "xyxy",
+                "Create", "Design", "Magic", "Memories"
+            ];
+
+            // 🚀 MODIFICATION 2: Removed showBTTOverlay
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const container = containerRef.current;
+                if (!canvas || !container) return;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                let animationId;
+                const dpr = window.devicePixelRatio || 1;
+
+                const initBodies = (logicalWidth) => {
+                    const bodies = [];
+                    const NUM_SHAPES = 24;
+                    const SPAWN_X_CENTER = logicalWidth / 2;
+                    const MIN_RADIUS = 30;
+                    const MAX_RADIUS = 60;
+                    
+                    for (let i = 0; i < NUM_SHAPES; i++) {
+                        const radius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
+                        bodies.push({
+                            x: SPAWN_X_CENTER + (Math.random() - 0.5) * logicalWidth * 0.7,
+                            y: -radius * 2 - (i * 50), 
+                            radius: radius,
+                            vx: 0,
+                            vy: 0,
+                            color: '#22c55e',
+                            isStar: false,
+                            angle: Math.random() * Math.PI,
+                            vAngle: 0,
+                            active: false,
+                            delay: i * 5,
+                            word: KEYWORDS[i % KEYWORDS.length], 
+                            flipProgress: 0, 
+                        });
+                    }
+                    bodies.push({
+                         x: SPAWN_X_CENTER, 
+                        y: -100 - (NUM_SHAPES * 50), 
+                        radius: 40, 
+                        vx: 0, 
+                        vy: 0, 
+                        color: '#ef4444', 
+                        isStar: true, 
+                        angle: 0.1, 
+                        vAngle: 0, 
+                        active: false, 
+                        delay: NUM_SHAPES * 5 + 20,
+                        word: "xyxy",
+                        flipProgress: 0,
+                    });
+                    
+                    bodiesRef.current = bodies;
+                };
+
+                const resizeObserver = new ResizeObserver(entries => {
+                    for (let entry of entries) {
+                        const { width, height } = entry.contentRect;
+                        canvas.style.width = `${width}px`;
+                        canvas.style.height = `${height}px`;
+                        canvas.width = width * dpr;
+                        canvas.height = height * dpr; 
+                        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                        if (bodiesRef.current.length === 0 && width > 0) {
+                             initBodies(width);
+                        }
+                    }
+                    if (animationId) cancelAnimationFrame(animationId);
+                    animationId = requestAnimationFrame(loop);
+                });
+                
+                resizeObserver.observe(container);
+
+                const GRAVITY = 0.8;
+                let frameCount = 0;
+
+                const loop = () => {
+                    const logicalW = canvas.width / dpr;
+                    const logicalH = canvas.height / dpr;
+                    const floorY = logicalH; 
+
+                    ctx.clearRect(0, 0, logicalW, logicalH); 
+                    frameCount++;
+
+                    const activeBodies = bodiesRef.current.filter(b => b.active || frameCount > b.delay && (b.active = true));
+
+                    activeBodies.forEach(b => {
+                        b.vy += GRAVITY;
+                        b.x += b.vx;
+                        b.y += b.vy;
+                        b.angle += b.vAngle;
+                        b.vx *= 0.8;
+                        b.vAngle *= 0.5;
+                        
+                        const targetFlip = isBTT ? 1 : 0;
+                        b.flipProgress += (targetFlip - b.flipProgress) * 0.1;
+
+                        if (b.y > floorY - b.radius) {
+                            b.y = floorY - b.radius;
+                            b.vy *= -0.4;
+                            b.vx *= 0.5;
+                            b.vAngle = (Math.random() - 0.5) * 0.1;
+                        }
+                        if (b.x < b.radius) {
+                            b.x = b.radius;
+                            b.vx *= -0.2;
+                        }
+                        if (b.x > logicalW - b.radius) {
+                            b.x = logicalW - b.radius;
+                            b.vx *= -0.2;
+                        }
+                    });
+
+                    for (let iter = 0; iter < 8; iter++) {
+                        for (let i = 0; i < activeBodies.length; i++) {
+                            for (let j = i + 1; j < activeBodies.length; j++) {
+                                const b1 = activeBodies[i];
+                                const b2 = activeBodies[j];
+                                const dx = b2.x - b1.x;
+                                const dy = b2.y - b1.y;
+                                const distSq = dx * dx + dy * dy;
+                                const min_dist = b1.radius + b2.radius;
+                                const min_dist_sq = min_dist * min_dist;
+
+                                if (distSq < min_dist_sq && distSq > 0.01) { 
+                                    const dist = Math.sqrt(distSq);
+                                    const overlap = min_dist - dist;
+                                    const nx = dx / dist;
+                                    const ny = dy / dist;
+
+                                    b1.x -= overlap * nx * 0.5;
+                                    b1.y -= overlap * ny * 0.5;
+                                    b2.x += overlap * nx * 0.5;
+                                    b2.y += overlap * ny * 0.5;
+
+                                    const v_transfer = 0.5;
+                                    const v1x_old = b1.vx;
+                                    const v1y_old = b1.vy;
+
+                                    b1.vx = b1.vx * (1 - v_transfer) + b2.vx * v_transfer;
+                                    b1.vy = b1.vy * (1 - v_transfer) + b2.vy * v_transfer;
+                                    b2.vx = b2.vx * (1 - v_transfer) + v1x_old * v_transfer;
+                                    b2.vy = b2.vy * (1 - v_transfer) + v1y_old * v_transfer;
+                                    
+                                    b1.vAngle += (Math.random() - 0.5) * 0.05;
+                                    b2.vAngle += (Math.random() - 0.5) * 0.05;
+                                }
+                            }
+                        }
+                    }
+
+                    activeBodies.forEach(b => {
+                        ctx.save();
+                        ctx.translate(b.x, b.y);
+                        
+                        const scaleX = Math.cos(b.flipProgress * Math.PI);
+                        ctx.scale(Math.abs(scaleX), 1);
+                        ctx.rotate(b.angle);
+                        
+                        const isBack = b.flipProgress > 0.5;
+                        const blackColor = '#000000'; // Black color for border/non-star text
+                        
+                        if (isBack) {
+                            ctx.fillStyle = '#FFFFFF'; 
+                            ctx.strokeStyle = '#000000';
+                            ctx.lineWidth = 2;
+                            
+                            // 1. 绘制背景/元素形状 (白色填充，黑色边框)
+                            if (b.isStar) {
+                                // Draw White Fill 
+                                drawStarFixed(ctx, b.radius, '#FFFFFF');
+                                
+                                // Draw Black Border
+                                ctx.save();
+                                ctx.strokeStyle = blackColor;
+                                ctx.lineWidth = 2;
+                                ctx.lineJoin = 'round';
+                                ctx.beginPath();
+                                // Redraw path to stroke
+                                drawStarFixed(ctx, b.radius, blackColor); 
+                                ctx.stroke();
+                                ctx.restore();
+
+                            } else {
+                                // Sphere front face (White Sphere with Black Border)
+                                
+                                // Draw White Fill
+                                ctx.fillStyle = '#FFFFFF';
+                                ctx.beginPath();
+                                ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
+                                ctx.fill();
+
+                                // Draw Black Border
+                                ctx.strokeStyle = blackColor;
+                                ctx.lineWidth = 2;
+                                ctx.beginPath();
+                                ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
+                                ctx.stroke();
+                            }
+
+                            // 2. 绘制文字 (修正可读性，星星为白色)
+                            
+                            // 🚀 修正 2: 星星文字为白色，其他为黑色
+                            ctx.fillStyle = b.isStar ? '#FFFFFF' : blackColor; 
+                            
+                            ctx.font = `700 ${Math.max(10, b.radius * (b.isStar ? 0.5 : 0.35))}px Inter`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            
+                            // 🚀 修正 1: 确保文字反向时仍可读 (Fixes mirroring)
+                            ctx.save();
+                           
+                            const maxTextWidth = b.radius * 1.8;
+                            let displayWord = b.word;
+                            
+                            
+                            ctx.fillText(displayWord, 0, 0);
+                            ctx.restore(); // 恢复文字的反转状态
+                            
+
+                        } else {
+                            // Front face (Original Colors and Shapes)
+                            if (b.isStar) {
+                                // Star front face (Red Star)
+                                drawStarFixed(ctx, b.radius, b.color); 
+                            } else {
+                                // Sphere front face (Green Sphere)
+                                ctx.fillStyle = b.color;
+                                ctx.beginPath();
+                                ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
+
+                        ctx.restore();
+                    });
+
+                    animationId = requestAnimationFrame(loop);
+                };
+
+                // Star click handler for BTT mode
+                const handleCanvasClick = (e) => {
+                    if (!isBTT) return;
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const clickY = e.clientY - rect.top;
+                    const dpr = window.devicePixelRatio || 1;
+                    
+                    // Normalize to logical coordinates
+                    const logicalX = clickX; 
+                    const logicalY = clickY; 
+
+                    const starBody = bodiesRef.current.find(b => b.isStar);
+                    
+                    if (starBody) {
+                        const dx = starBody.x - logicalX;
+                        const dy = starBody.y - logicalY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        // Check if click is within the star's bounding circle (radius)
+                        if (distance < starBody.radius) {
+                            window.location.href = 'https://xyxyspace.github.io/';
+                        }
+                    }
+                };
+                
+                canvas.addEventListener('click', handleCanvasClick);
+
+                return () => {
+                    resizeObserver.disconnect();
+                    if (animationId) cancelAnimationFrame(animationId);
+                    canvas.removeEventListener('click', handleCanvasClick); // Clean up
+                };
+            }, [isDesktop, isBTT]); 
+
+            return (
+                e('div', { className: `relative w-full h-full flex flex-col justify-between` }, 
+                    
+                    // Title (Content adjusted for BTT mode, removed showBTTOverlay)
+                    e('div', { className: "absolute top-0 left-0 w-full max-w-lg z-10 pointer-events-none px-8 pt-8 md:p-8 animate-fade-in" }, 
+                        e('h1', { className: `italic leading-tight mb-4 ${isBTT ? 'text-5xl md:text-7xl text-black' : 'text-5xl md:text-7xl text-black'}` }, 
+                            isBTT ? "Behind The Tree" : 
+                            e(React.Fragment, null, 
+                                "This year's ", 
+                                e('br', null), 
+                                " Christmas Tree"
+                            )
+                        ),
+                         isBTT && e('p', { className: "text-base md:text-xl font-sans mt-2 text-gray-500 pointer-events-auto" }, 
+                                ""
+                         )
+                    ),
+
+                    // Removed BTT Content Overlay (showBTTOverlay logic)
+                    
+                    e('div', { className: `flex-1 relative z-0`, ref: containerRef }, 
+                        e('canvas', { ref: canvasRef, className: "block w-full h-full" })
+                    )
+                )
+            );
+        };
+
+        // --- GamePage ---
+        const GamePage = ({ isDesktop, onGameFinish, onContainerResize }) => {
+            const [placedPieces, setPlacedPieces] = useState([]);
+            const [currentPiece, setCurrentPiece] = useState(null);
+            const [tracingImage, setTracingImage] = useState(null);
+            const [gameFinished, setGameFinished] = useState(false);
+            const [isEngineReady, setIsEngineReady] = useState(false); 
+            
+            const canvasRef = useRef(null);
+            const containerRef = useRef(null);
+            const engineRef = useRef(null);
+            const runnerRef = useRef(null);
+            const renderLoopRef = useRef(null);
+            const resizeObserverRef = useRef(null);
+            
+            const placedPiecesRef = useRef([]); 
+            const gameFinishedRef = useRef(false); 
+
+            useEffect(() => {
+                placedPiecesRef.current = placedPieces;
+                gameFinishedRef.current = gameFinished; 
+            }, [placedPieces, gameFinished]); 
+            
+            const GROUND_THICKNESS = 10; 
+            const WALL_THICKNESS = 50; 
+            const INITIAL_Y_POS = -50; 
+
+            const commonPieceProps = {
+                restitution: 0.0, 
+                friction: 1.0,    
+                density: 0.003,    
+            };
+            
+            const rotate = useCallback(() => {
+                if (currentPiece && engineRef.current) {
+                    const body = currentPiece.body;
+                    const rotationImpulse = 0.4; 
+                    Body.setAngularVelocity(body, body.angularVelocity + (Math.random() > 0.5 ? 1 : -1) * rotationImpulse); 
+                }
+            }, [currentPiece]); 
+            
+            const move = useCallback((dir) => {
+                if (currentPiece && engineRef.current) {
+                    const body = currentPiece.body;
+                    const moveForce = 0.6; 
+                    Body.applyForce(body, body.position, { x: dir * moveForce, y: 0 }); 
+                }
+            }, [currentPiece]); 
+
+            const dropNewPiece = (pieceData, isStar = false) => {
+                if (!containerRef.current || !engineRef.current || !isEngineReady) {
+                     return;
+                }
+                
+                if (currentPiece) {
+                    setCurrentPiece(null);
+                }
+                
+                if (pieceData.body) {
+                    World.add(engineRef.current.world, pieceData.body);
+                    Body.setVelocity(pieceData.body, { x: 0, y: 1 }); 
+                } else {
+                    return;
+                }
+
+                setPlacedPieces(prev => [...prev, pieceData]);
+                setCurrentPiece(pieceData); 
+
+                if (isStar) {
+                    setGameFinished(true); 
+                    
+                    setTimeout(() => {
+                        if (runnerRef.current && runnerRef.current.running) {
+                            Runner.stop(runnerRef.current); 
+                        }
+                        
+                        if (engineRef.current) {
+                            Composite.allBodies(engineRef.current.world).forEach(body => {
+                                if (!body.isStatic && body.label !== 'Ground' && body.label !== 'WallLeft' && body.label !== 'WallRight') {
+                                    Body.setStatic(body, true);
+                                }
+                            });
+                        }
+                        
+                        setCurrentPiece(null); 
+                        onGameFinish(placedPiecesRef.current); 
+                        
+                    }, 5000); 
+                }
+            };
+
+            useEffect(() => {
+                if (!containerRef.current || !canvasRef.current) {
+                    return;
+                }
+                
+                const canvas = canvasRef.current;
+                const container = containerRef.current;
+
+                const dpr = window.devicePixelRatio || 1;
+                
+                const engine = Engine.create({
+                    gravity: { x: 0, y: 0.3 }, 
+                    positionIterations: 50,  
+                    velocityIterations: 30   
+                });
+                engineRef.current = engine;
+                
+                setIsEngineReady(true); 
+
+                const runner = Runner.create();
+                runnerRef.current = runner;
+                Runner.run(runner, engine);
+
+                const keepDynamic = (event) => {
+                    if (gameFinishedRef.current) return; 
+                    
+                    const bodies = Composite.allBodies(engine.world); 
+                    bodies.forEach(body => {
+                        if (!body.isStatic) {
+                            Body.setAngularVelocity(body, body.angularVelocity + (Math.random() - 0.5) * 0.0001); 
+                        }
+                    });
+                };
+                Events.on(engine, 'beforeUpdate', keepDynamic);
+
+                const render = () => {
+                    if (!canvasRef.current || !engineRef.current) {
+                        renderLoopRef.current = requestAnimationFrame(render);
+                        return;
+                    }
+
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return;
+                    
+                    const cw = canvas.width / dpr;
+                    const ch = canvas.height / dpr;
+                    
+                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); 
+                    ctx.clearRect(0, 0, cw, ch);
+
+                    const allPieces = placedPiecesRef.current; 
+                    const hasPieces = allPieces.length > 0; // 检查是否已放置任何元素
+
+                    // 背景指引的树形状（无透明度，在第一个元素落下后消失）
+                    if (!hasPieces) {
+                        const groundLevel = ch - GROUND_THICKNESS / 2;
+
+                        ctx.save();
+                        // ctx.globalAlpha = 1.0; 
+                        ctx.fillStyle = '#22c55e'; // Green color
+                        
+                        // Define tree shape coordinates (e.g., a cone)
+                        const padding = 50; 
+                        const baseWidth = cw - 2 * padding;
+                        const coneTopY = 50;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(cw / 2, coneTopY); // Top center
+                        ctx.lineTo(cw / 2 + baseWidth / 2, groundLevel); // Bottom right 
+                        ctx.lineTo(cw / 2 - baseWidth / 2, groundLevel); // Bottom left 
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    
+                    allPieces.forEach(piece => {
+                        if (!piece.body) return;
+
+                        const { body, img, width, height } = piece;
+
+                        ctx.save();
+                        ctx.translate(body.position.x, body.position.y);
+                        ctx.rotate(body.angle);
+
+                        if (img && img.complete) {
+                            ctx.drawImage(img, -width / 2, -height / 2, width, height);
+                        } else {
+                            ctx.fillStyle = body.label === 'Star' ? '#ef4444' : (body.label === 'RandomSphere' ? '#22c55e' : '#60a5fa');
+                            if (body.label === 'Star') {
+                                // 使用统一的 Star 绘制函数
+                                drawStarFixed(ctx, width/2, ctx.fillStyle); 
+                            } else if (body.label === 'RandomSphere') {
+                                ctx.beginPath();
+                                ctx.arc(0, 0, width / 2, 0, Math.PI * 2);
+                                ctx.fill();
+                            } else {
+                                ctx.fillRect(-width / 2, -height / 2, width, height);
+                            }
+                        }
+                        
+                        ctx.restore();
+                    });
+                    
+                    renderLoopRef.current = requestAnimationFrame(render);
+                };
+                
+                renderLoopRef.current = requestAnimationFrame(render);
+
+                const updatePhysicsBounds = (width, height) => {
+                    const bodiesToRemove = Composite.allBodies(engine.world).filter(b => 
+                        b.label === 'WallLeft' || b.label === 'WallRight' || b.label === 'Ground'
+                    );
+                    World.remove(engine.world, bodiesToRemove);
+                    
+                    const wallLeft = Bodies.rectangle(
+                        -WALL_THICKNESS / 2, 
+                        height / 2, 
+                        WALL_THICKNESS, 
+                        height, 
+                        { isStatic: true, label: 'WallLeft', friction: 1.0, restitution: 0.1 } 
+                    );
+
+                    const wallRight = Bodies.rectangle(
+                        width + WALL_THICKNESS / 2, 
+                        height / 2, 
+                        WALL_THICKNESS, 
+                        height, 
+                        { isStatic: true, label: 'WallRight', friction: 1.0, restitution: 0.1 }
+                    );
+                    
+                    const ground = Bodies.rectangle(
+                        width / 2, 
+                        height - GROUND_THICKNESS / 2, 
+                        width + 2 * WALL_THICKNESS, 
+                        GROUND_THICKNESS, 
+                        { 
+                            isStatic: true, 
+                            label: 'Ground',
+                            friction: 1.0, 
+                            restitution: 0.1 
+                        }
+                    );
+                    
+                    World.add(engine.world, [ground, wallLeft, wallRight]); 
+                };
+
+                const resizeHandler = (entries) => {
+                    for (let entry of entries) {
+                        const { width, height } = entry.contentRect;
+                        canvas.style.width = `${width}px`;
+                        canvas.style.height = `${height}px`;
+                        canvas.width = width * dpr;
+                        canvas.height = height * dpr;
+                        
+                        if (width > 0 && height > 0) {
+                            updatePhysicsBounds(width, height);
+                            onContainerResize(width, height); 
+                        }
+                    }
+                };
+                
+                const observer = new ResizeObserver(resizeHandler);
+                observer.observe(container);
+                resizeObserverRef.current = observer;
+
+                return () => {
+                    if (renderLoopRef.current) {
+                        cancelAnimationFrame(renderLoopRef.current);
+                    }
+                    if (runnerRef.current) {
+                        Runner.stop(runnerRef.current);
+                    }
+                    if (engineRef.current) {
+                        // 核心修复：修复 Matter.js 清理时的 TypeError
+                        Events.off(engineRef.current, 'beforeUpdate', keepDynamic); 
+                        // 确保清除所有物理实体
+                        World.clear(engineRef.current.world, true);
+                        Engine.clear(engineRef.current);
+                    }
+                    if (resizeObserverRef.current) {
+                        resizeObserverRef.current.disconnect();
+                    }
+                };
+            }, [onContainerResize]); 
+
+            const spawnRandomSphere = () => {
+                if (currentPiece) {
+                    setCurrentPiece(null);
+                    Body.setAngularVelocity(currentPiece.body, 0);
+                    Body.setVelocity(currentPiece.body, { x: 0, y: currentPiece.body.velocity.y });
+                }
+
+                if (gameFinished) return;
+                
+                const cw = containerRef.current.clientWidth;
+                
+                const MIN_RADIUS = 30; 
+                const MAX_RADIUS = 60; 
+                const baseRadius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS); 
+                const yScale = 0.8 + Math.random() * 0.4; 
+                
+                const visualW = baseRadius * 2;
+                const visualH = baseRadius * 2 * yScale;
+                const physicsRadius = baseRadius; 
+
+                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${visualW}" height="${visualH}" viewBox="0 0 ${visualW} ${visualH}" fill="#22c55e"><ellipse cx="${visualW/2}" cy="${visualH/2}" rx="${visualW/2}" ry="${visualH/2 * 0.95}"/></svg>`;
+                const img = new Image();
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+
+                img.onload = () => {
+                    const spawnX = cw * 0.5 + (Math.random() - 0.5) * (cw * 0.8 - physicsRadius * 2);
+                    
+                    const body = Bodies.circle(
+                        spawnX, 
+                        INITIAL_Y_POS, 
+                        physicsRadius, 
+                        {
+                            ...commonPieceProps, 
+                            label: 'RandomSphere',
+                            angularVelocity: (Math.random() - 0.5) * 0.05 
+                        }
+                    );
+                    
+                    dropNewPiece({
+                        id: Date.now().toString(),
+                        img,
+                        width: visualW, 
+                        height: visualH, 
+                        body: body
+                    });
+                };
+            };
+
+            const spawnRedStar = () => {
+                if (currentPiece) {
+                    setCurrentPiece(null);
+                }
+
+                if (gameFinished) return;
+                
+                const cw = containerRef.current.clientWidth;
+
+                const starW = 80;
+                const starH = 80;
+                const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${starW}" height="${starH}" viewBox="0 0 24 24" fill="#EF4444"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+                const img = new Image();
+                img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent);
+
+                img.onload = () => {
+                    const physicsRadius = starW / 2; 
+                    const spawnX = cw * 0.5;
+                    
+                    const body = Bodies.circle(
+                        spawnX, 
+                        INITIAL_Y_POS, 
+                        physicsRadius, 
+                        {
+                            ...commonPieceProps, 
+                            label: 'Star',
+                            friction: 1.0, 
+                        }
+                    );
+                    
+                    dropNewPiece({
+                        id: 'star-finish',
+                        img,
+                        width: starW,
+                        height: starH,
+                        body: body
+                    }, true); 
+                };
+            };
+
+            const handleFileSelect = (e) => {
+                if (currentPiece) {
+                    setCurrentPiece(null);
+                }
+
+                if (gameFinished) {
+                    e.target.value = null;
+                    return;
+                }
+                
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        if (evt.target?.result) {
+                            setTracingImage(evt.target.result);
+                        }
+                        e.target.value = null;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+                e.target.value = null; 
+            };
+
+            const handleTraceConfirm = (dataUrl) => {
+                setTracingImage(null);
+                if (!containerRef.current || !engineRef.current || gameFinished) return;
+
+                const img = new Image();
+                img.src = dataUrl;
+                img.onload = () => {
+                    const containerW = containerRef.current.clientWidth;
+                    
+                    const maxW = containerW * 0.4;
+                    const targetMaxW = maxW * 0.75; 
+                    const scaleFactor = Math.min(1, targetMaxW / img.width);
+                    
+                    const pieceW = img.width * scaleFactor;
+                    const pieceH = img.height * scaleFactor;
+
+                    const startX = containerW * 0.5;
+                    const startY = INITIAL_Y_POS; 
+
+                    const body = Bodies.rectangle(
+                        startX, 
+                        startY, 
+                        pieceW, 
+                        pieceH, 
+                        {
+                            ...commonPieceProps, 
+                            label: 'CustomPiece',
+                        }
+                    );
+                    
+                    dropNewPiece({
+                        id: Date.now().toString(),
+                        img,
+                        width: pieceW,
+                        height: pieceH,
+                        body: body
+                    });
+                };
+            };
+
+            const handleUndo = () => {
+                if (gameFinished) return;
+                
+                const pieceToUndo = currentPiece || placedPieces[placedPieces.length - 1];
+                
+                if (pieceToUndo && pieceToUndo.body && engineRef.current) { 
+                    World.remove(engineRef.current.world, pieceToUndo.body);
+                    
+                    if (currentPiece && currentPiece.id === pieceToUndo.id) {
+                        setCurrentPiece(null);
+                        setPlacedPieces(prev => prev.filter(p => p.id !== pieceToUndo.id));
+                    } else if (placedPieces.length > 0) {
+                        setPlacedPieces(prev => prev.slice(0, -1));
+                    }
+                }
+            };
+
+            const handleFinish = () => {
+                if (placedPieces.length < 1 && !currentPiece) {
+                    alert('Please place at least one decoration.');
+                    return;
+                }
+                if (currentPiece) {
+                    setCurrentPiece(null);
+                }
+                spawnRedStar();
+            };
+
+            useEffect(() => {
+                if (!isDesktop) return;
+
+                const handleKeyDown = (e) => {
+                    if (currentPiece) {
+                        switch (e.key) {
+                            case 'ArrowLeft':
+                                e.preventDefault();
+                                move(-1);
+                                break;
+                            case 'ArrowRight':
+                                e.preventDefault();
+                                move(1);
+                                break;
+                            case ' ':
+                                e.preventDefault();
+                                rotate();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [isDesktop, currentPiece, move, rotate]);
+
+            return (
+                e('div', { className: `relative w-full h-full bg-white flex flex-col justify-between` },
+                    
+                    e('div', { className: "flex justify-center gap-x-8 items-center p-4 z-20 w-full bg-white/50 backdrop-blur-sm" },
+                        e('button', { 
+                            onClick: spawnRandomSphere, 
+                            className: "hover:opacity-70 transition text-black p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            disabled: tracingImage || gameFinished || !isEngineReady 
+                        }, e(IconSphere, { className: "text-[#22c55e]" })), 
+                        
+
+                        e('label', { 
+                            className: `cursor-pointer hover:opacity-70 transition text-black p-3 focus:outline-none ${tracingImage || gameFinished || !isEngineReady ? 'opacity-50 cursor-not-allowed' : ''}` 
+                        },
+                            e(IconPlus, null),
+                            e('input', { 
+                                type: "file", 
+                                accept: "image/*", 
+                                className: "hidden", 
+                                onChange: handleFileSelect, 
+                                disabled: tracingImage || gameFinished || !isEngineReady 
+                            })
+                        ),
+                        
+                        e('button', { 
+                            onClick: handleUndo, 
+                            className: "hover:opacity-70 transition text-black p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            disabled: (placedPieces.length === 0 && !currentPiece) || gameFinished || !isEngineReady 
+                        }, e(IconUndo, null)),
+
+                        e('button', { 
+                            onClick: handleFinish, 
+                            className: "hover:opacity-70 transition text-red-500 p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            disabled: gameFinished || (placedPieces.length === 0 && !currentPiece) || !isEngineReady 
+                        }, e(IconStar, null))
+                    ),
+
+                    e('div', { 
+                        className: "flex-1 relative mx-0 md:mx-8 mb-0 overflow-hidden min-h-[300px]", 
+                        ref: containerRef 
+                    },
+                        e('canvas', { 
+                            ref: canvasRef, 
+                            className: "block w-full h-full relative z-10" 
+                        })
+                    ),
+
+                    e('div', { className: "w-full flex justify-center gap-x-8 items-center border-t-2 border-gray-900 py-3 text-black bg-white/50 backdrop-blur-sm z-20" },
+                        e('button', { 
+                            onClick: () => move(-1), 
+                            className: "p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            title: isDesktop ? "Move Left (Left Arrow)" : "Move Left", 
+                            disabled: !currentPiece || !isEngineReady 
+                        }, e(IconArrowLeft, null)),
+                        e('button', { 
+                            onClick: rotate, 
+                            className: "p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            title: isDesktop ? "Rotate (Spacebar)" : "Rotate", 
+                            disabled: !currentPiece || !isEngineReady 
+                        }, e(IconRotate, null)),
+                        
+                        e('button', { 
+                            onClick: () => move(1), 
+                            className: "p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            title: isDesktop ? "Move Right (Right Arrow)" : "Move Right", 
+                            disabled: !currentPiece || !isEngineReady 
+                        }, e(IconArrowRight, null))
+                    ),
+
+                    tracingImage && (
+                        e(TracingModal, { 
+                            imageSrc: tracingImage, 
+                            onConfirm: handleTraceConfirm, 
+                            onCancel: () => {
+                                if (!currentPiece) setCurrentPiece(null);
+                                setTracingImage(null);
+                            } 
+                        })
+                    )
+                )
+            );
+        };
+
+        // --- ForestTreeItem (Adjusted control menu styling) ---
+        const ForestTreeItem = ({ tree, onDelete, onUpdate, isMine }) => { // 🚀 这里多了 isMine
+            const isDragging = useRef(false);
+            const lastPos = useRef({ x: 0, y: 0 });
+
+            const getClientPos = (e) => {
+                const event = e.touches && e.touches.length > 0 ? e.touches[0] : e;
+                return { x: event.clientX, y: event.clientY };
+            }
+
+            const handleStart = useCallback((e) => {
+                if (!isMine) return; // 🔒 关键：如果不是我的新树，不许动
+                e.preventDefault();
+                isDragging.current = true;
+                lastPos.current = getClientPos(e);
+            }, [isMine]);
+
+            const handleMove = useCallback((e) => {
+                if (!isDragging.current || !isMine) return;
+                const currentPos = getClientPos(e);
+                const dx = (currentPos.x - lastPos.current.x) / 1; // 这里可以根据缩放调整灵敏度
+                const dy = (currentPos.y - lastPos.current.y) / 1;
+                
+                onUpdate(tree.id, { x: tree.x + dx, y: tree.y + dy });
+                lastPos.current = currentPos;
+            }, [isMine, tree.id, tree.x, tree.y, onUpdate]);
+
+            const handleEnd = useCallback(async () => {
+                if (isDragging.current && isMine) {
+                    isDragging.current = false;
+                    // 🚀 保存最终位置到 Supabase
+                    await supabase.from('forest').update({ x: tree.x, y: tree.y }).eq('id', tree.id);
+                }
+            }, [isMine, tree.id, tree.x, tree.y]);
+
+            useEffect(() => {
+                if (isDragging.current) {
+                    window.addEventListener('mousemove', handleMove);
+                    window.addEventListener('mouseup', handleEnd);
+                    window.addEventListener('touchmove', handleMove);
+                    window.addEventListener('touchend', handleEnd);
+                }
+                return () => {
+                    window.removeEventListener('mousemove', handleMove);
+                    window.removeEventListener('mouseup', handleEnd);
+                    window.removeEventListener('touchmove', handleMove);
+                    window.removeEventListener('touchend', handleEnd);
+                };
+            }, [handleMove, handleEnd]);
+
+            return (
+                e('div', {
+                    style: {
+                        left: `${tree.x}px`,
+                        top: `${tree.y}px`,
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) rotate(${tree.rotation || 0}deg)`,
+                        cursor: isMine ? 'grab' : 'default',
+                        touchAction: 'none'
+                    },
+                    onMouseDown: handleStart,
+                    onTouchStart: handleStart,
+                },
+                    e('img', {
+                        src: tree.dataURL,
+                        style: { width: `${tree.width}px`, height: 'auto' },
+                        draggable: false
+                    }),
+                    // 🔒 只有刚上传的人能看到删除按钮
+                    isMine && e('button', {
+                        onClick: (e) => { e.stopPropagation(); onDelete(tree.id); },
+                        className: "absolute -top-10 left-1/2 -translate-x-1/2 p-2 bg-white rounded-full shadow-lg text-red-500"
+                    }, e(IconTrash))
+                )
+            );
+        };
+
+        // --- ForestGallery (Style changes and Focus logic added) ---
+        // --- ForestGallery ---
+        const ForestGallery = ({ trees, onBack, setTrees, lastAddedTreeId }) => {
+            const containerRef = useRef(null);
+            const [scale, setScale] = useState(0.8); 
+            const [offset, setOffset] = useState({ x: 0, y: 0 }); 
+            const isDragging = useRef(false);
+            const lastPos = useRef({ x: 0, y: 0 });
+            const virtualSize = 5000;
+            const virtualCenter = virtualSize / 2;
+
+            // 1. 进入森林时从数据库抓取所有树
+            useEffect(() => {
+                const fetchAll = async () => {
+                    const { data, error } = await supabase.from('forest').select('*');
+                    if (!error && data) setTrees(data);
+                };
+                fetchAll();
+            }, []);
+
+            // 2. 初始居中和聚焦逻辑 (修复了 containerW 未定义)
+            useEffect(() => {
+                const container = containerRef.current;
+                if (!container) return;
+
+                const containerW = container.clientWidth;
+                const containerH = container.clientHeight;
+                
+                let targetX = virtualCenter;
+                let targetY = virtualCenter;
+                let initialZoom = 0.8; 
+
+                if (lastAddedTreeId) {
+                    const newTree = trees.find(t => String(t.id) === String(lastAddedTreeId));
+                    if (newTree) {
+                        targetX = newTree.x;
+                        targetY = newTree.y;
+                        initialZoom = Math.min(2.0, (newTree.scale || 1) * 1.5);
+                    }
+                }
+                
+                if (containerW > 0 && containerH > 0) {
+                    setScale(initialZoom);
+                    setOffset({ 
+                        x: containerW / 2 - targetX * initialZoom,
+                        y: containerH / 2 - targetY * initialZoom
+                    });
+                }
+            }, [trees.length, lastAddedTreeId]);
+
+            const getClientPos = (e) => {
+                 const event = e.touches && e.touches.length > 0 ? e.touches[0] : e;
+                 return { x: event.clientX, y: event.clientY };
+            };
+
+            const handleStart = (e) => {
+                if (e.target.closest('.tree-item-controls')) return; 
+                isDragging.current = true;
+                lastPos.current = getClientPos(e);
+            };
+
+            const handleMove = (e) => {
+                if (!isDragging.current) return;
+                const currentPos = getClientPos(e);
+                const dx = currentPos.x - lastPos.current.x;
+                const dy = currentPos.y - lastPos.current.y;
+                setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+                lastPos.current = currentPos;
+            };
+
+            const handleEnd = () => { isDragging.current = false; };
+
+            const handleWheel = (e) => {
+                e.preventDefault();
+                const zoomFactor = 1 - e.deltaY * 0.001;
+                const newScale = Math.max(0.05, Math.min(2.0, scale * zoomFactor));
+                const rect = containerRef.current.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const worldX = (mouseX - offset.x) / scale;
+                const worldY = (mouseY - offset.y) / scale;
+                setOffset({ x: mouseX - worldX * newScale, y: mouseY - worldY * newScale });
+                setScale(newScale);
+            };
+
+            useEffect(() => {
+                const c = containerRef.current;
+                if (c) c.addEventListener('wheel', handleWheel, { passive: false });
+                return () => c && c.removeEventListener('wheel', handleWheel);
+            }, [handleWheel]);
+
+            return (
+                e('div', { className: "w-full h-[100dvh] relative overflow-hidden bg-white" }, 
+                    e('div', {
+                        ref: containerRef,
+                        className: "absolute inset-0 cursor-grab", 
+                        onMouseDown: handleStart,
+                        onMouseMove: handleMove,
+                        onMouseUp: handleEnd,
+                        onMouseLeave: handleEnd,
+                        onTouchStart: handleStart,
+                        onTouchMove: handleMove,
+                        onTouchEnd: handleEnd,
+                        style: { touchAction: 'none' } 
+                    },
+                        e('div', {
+                            style: {
+                                width: `${virtualSize}px`,
+                                height: `${virtualSize}px`,
+                                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
+                                transformOrigin: '0 0',
+                                position: 'absolute',
+                            }
+                        },
+                            trees.map(tree => 
+                                e(ForestTreeItem, { 
+                                    key: tree.id, 
+                                    tree: tree, 
+                                    isMine: lastAddedTreeId && String(tree.id) === String(lastAddedTreeId),
+                                    onDelete: async (id) => {
+                                        await supabase.from('forest').delete().eq('id', id);
+                                        setTrees(prev => prev.filter(t => t.id !== id));
+                                    },
+                                    onUpdate: (id, updates) => {
+                                        setTrees(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+                                    }
+                                })
+                            )
+                        )
+                    ),
+                    e('button', { 
+                        onClick: onBack, 
+                        className: "absolute top-4 left-4 p-3 rounded-full border-2 border-black bg-white z-50 shadow-md" 
+                    }, "Back"),
+                    e('div', { className: "absolute top-4 right-4 z-50 text-sm font-medium" }, `Zoom: ${(scale * 100).toFixed(0)}%`)
+                )
+            );
+        };
+
+        // --- App ---
+        const App = () => {
+            const [view, setView] = useState('HOME'); // 'HOME', 'BTT', 'FOREST'
+            const [isDesktop, setIsDesktop] = useState(true);
+            const [showFinal, setShowFinal] = useState(false); 
+            const [finalPieces, setFinalPieces] = useState([]); 
+            const [gameContainerSize, setGameContainerSize] = useState({ width: 0, height: 0 }); 
+            const [gameKey, setGameKey] = useState(0); 
+            const [lastAddedTreeId, setLastAddedTreeId] = useState(null); 
+            
+            const appRef = useRef(null); 
+            
+            // 使用 localStorage 存储树木数据
+            const [submittedTrees, setSubmittedTrees] = useState(() => {
+                try {
+                    const stored = localStorage.getItem('forestTrees');
+                    return stored ? JSON.parse(stored) : [];
+                } catch {
+                    return [];
+                }
+            });
+
+            useEffect(() => {
+                const check = () => setIsDesktop(window.innerWidth >= 768);
+                check();
+                window.addEventListener('resize', check);
+                return () => window.removeEventListener('resize', check);
+            }, []);
+
+            useEffect(() => {
+                const handleNav = (e) => setView(e.detail);
+                window.addEventListener('nav', handleNav);
+                return () => window.removeEventListener('nav', handleNav);
+            }, []);
+            
+            const handleOpenFinal = useCallback((pieces) => {
+                setFinalPieces(pieces);
+                setShowFinal(true);
+            }, []);
+
+            const handleContainerResize = useCallback((width, height) => {
+                setGameContainerSize({ width, height });
+            }, []);
+
+            // 修复：关闭海报/新一棵树时，异步滚动回顶部并重置游戏
+            const handleCloseFinal = useCallback(() => {
+                setShowFinal(false); 
+                setFinalPieces([]);
+                setGameKey(prev => prev + 1); // 重置 GamePage
+                setLastAddedTreeId(null); // Reset focus ID
+                
+                setTimeout(() => { // 异步执行确保 DOM 更新完成
+                    if (appRef.current && !isDesktop) {
+                        // 强制使用 'auto' 行为立即滚动，避免 'smooth' 导致的兼容性问题
+                        appRef.current.scrollTo({ top: 0, behavior: 'auto' }); 
+                    }
+                }, 0);
+            }, [isDesktop]);
+
+            const handleToggleBTT = useCallback((e) => {
+                e.preventDefault();
+                const newView = view === 'BTT' ? 'HOME' : 'BTT';
+                setView(newView);
+                // 确保在切换到 Landing/BTT 视图时，如果不是 desktop，滚动到顶部
+                if (!isDesktop) {
+                     setTimeout(() => {
+                        if (appRef.current) {
+                            appRef.current.scrollTo({ top: 0, behavior: 'auto' });
+                        }
+                    }, 0);
+                }
+            }, [view, isDesktop]);
+            
+            // 修复：进入 Forest 视图
+            const handleOpenForest = useCallback((e) => {
+                e.preventDefault();
+                setLastAddedTreeId(null); // Reset focus ID when entering manually
+                setView('FOREST');
+            }, []);
+
+            // 修复：关闭 Forest Gallery 时，切换视图并滚动回顶部，重置游戏
+            const handleCloseForest = useCallback(() => {
+                setView('HOME');
+                setGameKey(prev => prev + 1); // 重置 GamePage
+                setLastAddedTreeId(null); // Reset focus ID
+                
+                setTimeout(() => { // 异步执行确保 DOM 更新完成
+                    if (appRef.current && !isDesktop) {
+                        appRef.current.scrollTo({ top: 0, behavior: 'auto' }); 
+                    }
+                }, 0);
+            }, [isDesktop]);
+
+            // 核心修改：在保存后，直接导航到 Forest 视图并重置 GamePage
+            const saveTreeToForest = useCallback(async (dataURL, width, height) => {
+                const virtualSize = 5000;
+                const newTreeData = {
+                    "dataURL": dataURL, // 对应数据库的 "dataURL"
+                    "width": width,
+                    "height": height,
+                    "x": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
+                    "y": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
+                    "scale": 0.4 + Math.random() * 0.8,
+                    "rotation": (Math.random() - 0.5) * 30,
+                };
+
+                const { data, error } = await supabase.from('forest').insert([newTreeData]).select();
+
+                if (!error && data) {
+                    const savedTree = data[0];
+                    setSubmittedTrees(prev => [...prev, savedTree]);
+                    setLastAddedTreeId(savedTree.id); 
+                    setView('FOREST'); 
+                    setShowFinal(false); 
+                    setGameKey(prev => prev + 1);
+                } else {
+                    console.error("Supabase Error:", error);
+                    alert("Error: " + (error?.message || "Check console"));
+                }
+            }, []);
+
+            // Footer Component
+            const Footer = () => (
+                e('div', { 
+                    className: "w-full flex justify-between items-center text-sm md:text-base font-medium border-t-2 border-gray-900 px-8 py-3 z-30 relative bg-white flex-shrink-0" 
+                }, 
+                    e('a', { 
+                        href: "#about", 
+                        className: `px-4 py-2 rounded-full border-2 border-black transition font-bold text-sm md:text-base focus:outline-none ${view === 'BTT' ? 'bg-black text-white' : 'text-black hover:bg-black hover:text-white'}`,
+                        onClick: handleToggleBTT
+                    }, "BTT"),
+                    e('div', { className: "flex flex-col items-center gap-1 text-gray-500 text-xs" },
+                        
+                        e('div', { className: "text-[10px] text-center mt-1" },
+                            "All images processed locally.", 
+                            e('br', null), 
+                            "We don't store your photos."
+                        )
+                    ),
+                    e('a', { 
+                        href: "#gallery", 
+                        className: "px-4 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none", 
+                        onClick: handleOpenForest 
+                    }, "The Forest")
+                )
+            );
+
+            // 核心重构：将 ForestGallery 作为一个独立视图
+            if (view === 'FOREST') {
+                // 确保 ForestGallery 占据整个视口，让它自己控制背景
+                 return e('div', { className: "w-full h-[100dvh] text-black" }, 
+                    e(ForestGallery, { 
+                       trees: submittedTrees, 
+                       onBack: handleCloseForest,
+                       setTrees: setSubmittedTrees,
+                       lastAddedTreeId: lastAddedTreeId 
+                    })
+                 );
+            }
+
+            // Default view (HOME or BTT) - the two-screen layout
+            const mainContainerClass = `w-full h-full bg-white text-black md:flex ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar'}`;
+
+            return (
+                e('div', { ref: appRef, className: mainContainerClass }, 
+                    
+                    // --- SCREEN 1: Landing Page (Left Column on Desktop, Top Screen on Mobile) ---
+                    e('div', { 
+                        // Desktop: w-1/2, h-full, Flex Column, Border
+                        // Mobile: w-full, h-[100dvh], Flex Column ( ensures 2-screen scroll )
+                        className: `w-full ${isDesktop ? 'md:w-1/2 h-full flex flex-col border-r-2 border-gray-900' : 'h-[100dvh] flex flex-col'} relative`,
+                        key: "screen-landing"
+                    },
+                        e('div', { className: "flex-1 relative w-full h-full" }, 
+                            e(LandingPage, { isDesktop: isDesktop, isBTT: view === 'BTT' })
+                        ),
+                        e(Footer, null)
+                    ),
+
+                    // --- SCREEN 2: Game Page (Right Column on Desktop, Bottom Screen on Mobile) ---
+                    e('div', { 
+                        // Desktop: w-1/2, h-full
+                        // Mobile: w-full, h-[100dvh]
+                        className: `${isDesktop ? 'w-1/2 h-full' : 'w-full h-[100dvh]'} relative flex-shrink-0`,
+                        key: "screen-game" 
+                    },
+                        e(GamePage, { 
+                            key: gameKey, 
+                            isDesktop: isDesktop, 
+                            onGameFinish: handleOpenFinal, 
+                            onContainerResize: handleContainerResize 
+                        })
+                    ),
+                    
+                    // --- Final Poster Modal (Still a fixed overlay, handles scroll back on close) ---
+                    showFinal && (
+                        e(FinalPoster, {
+                            pieces: finalPieces,
+                            containerWidth: gameContainerSize.width, 
+                            containerHeight: gameContainerSize.height,
+                            onClose: handleCloseFinal, 
+                            onNewTree: handleCloseFinal,
+                            onSendToForest: saveTreeToForest 
+                        })
+                    )
+                )
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(e(App, null));
+    </script>
+</body>
+</html>
