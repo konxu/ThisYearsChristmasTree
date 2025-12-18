@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>This Year's Chiristmas Tree (2025 version)</title>
+    <title>This Year's Christmas Tree (2025 version)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -14,7 +14,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -45,9 +45,25 @@
       .btn-close:hover {
         transform: rotate(90deg);
       }
+      /* 星星闪烁动画 */
+      @keyframes starPulse {
+        0%, 100% { 
+          opacity: 1; 
+          transform: scale(1);
+        }
+        50% { 
+          opacity: 0.7; 
+          transform: scale(1.1);
+        }
+      }
+      .star-clickable {
+        cursor: pointer;
+        animation: starPulse 2s ease-in-out infinite;
+      }
     </style>
 </head>
-<body class="bg-white text-black selection:bg-green-200"> <div id="root" class="h-full"></div>
+<body class="bg-white text-black selection:bg-green-200">
+    <div id="root" class="h-full"></div>
 
     <script>
         const { useState, useEffect, useRef, useCallback } = React;
@@ -67,10 +83,10 @@
         // --- Supabase 配置 ---
         const SUPABASE_URL = "https://rhoojefaverkibdihttg.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJob29qZWZhdmVya2liZGlodHRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NzI4MTMsImV4cCI6MjA4MTQ0ODgxM30.MYYRt1g7c5WmkxRN0lb4jhxdt1trNbmDjPKO5y0leEM";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const mySupabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- Icon Components 
-        const ICON_SIZE = "40"; 
+        // --- Icon Components (responsive size)
+        const ICON_SIZE = "clamp(32px, 5vw, 48px)"; 
 
         const IconPlus = (props) => (
             e('svg', { width: ICON_SIZE, height: ICON_SIZE, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
@@ -93,21 +109,21 @@
         );
 
         const IconArrowLeft = (props) => (
-            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+            e('svg', { style: { width: "clamp(32px, 5vw, 48px)", height: "clamp(32px, 5vw, 48px)" }, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
                 e('line', { x1: "19", y1: "12", x2: "5", y2: "12" }),
                 e('polyline', { points: "12 19 5 12 12 5" })
             )
         );
 
         const IconArrowRight = (props) => (
-            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+            e('svg', { style: { width: "clamp(32px, 5vw, 48px)", height: "clamp(32px, 5vw, 48px)" }, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
                 e('line', { x1: "5", y1: "12", x2: "19", y2: "12" }),
                 e('polyline', { points: "12 5 19 12 12 19" })
             )
         );
 
         const IconRotate = (props) => (
-            e('svg', { width: "40", height: "40", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
+            e('svg', { style: { width: "clamp(32px, 5vw, 48px)", height: "clamp(32px, 5vw, 48px)" }, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", ...props },
                 e('path', { d: "M21.5 2v6h-6" }),
                 e('path', { d: "M21.34 15.57a10 10 0 1 1-.57-8.38" })
             )
@@ -159,7 +175,7 @@
             ctx.fill();
         };
 
-        // --- TracingModal (No Change) ---
+        // --- TracingModal ---
         const TracingModal = ({ imageSrc, onConfirm, onCancel }) => {
             const canvasRef = useRef(null);
             const containerRef = useRef(null);
@@ -393,9 +409,8 @@
 
             return (
                 e('div', { className: "fixed inset-0 z-[9999] bg-black/90 flex flex-col items-center justify-center p-4" },
-                    e('div', { className: "text-white text-xl serif mb-4 text-center" }, 
-                        "Outline the Subject",
-                        e('div', { className: "text-sm font-sans mt-1 text-gray-300" }, "Draw a continuous line around the object.")
+                    e('div', { className: "text-white text-xl mb-4 text-center font-bold" }, 
+                        "Draw what you want to turn into a tree element"
                     ),
                     e('div', { ref: containerRef, className: "relative w-full max-w-lg h-[60vh] flex items-center justify-content bg-gray-900 rounded-lg overflow-hidden border border-gray-700" },
                         e('canvas', { 
@@ -411,40 +426,36 @@
                         })
                     ),
                     e('div', { className: "flex gap-4 mt-6 items-center" },
-                        e('button', { onClick: onCancel, className: "px-6 py-2 rounded-full border border-white text-white hover:bg-white hover:text-black transition focus:outline-none" }, "Cancel"),
+                        e('button', { onClick: onCancel, className: "px-6 py-2 rounded-full border-2 border-white text-white hover:bg-white hover:text-black transition font-bold focus:outline-none" }, "Cancel"),
                         e('button', { 
                             onClick: handleReset, 
                             title: "Reset Drawing",
-                            className: "px-4 py-2 rounded-full border border-white text-white hover:bg-red-500 hover:border-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none",
+                            className: "px-6 py-2 rounded-full border-2 border-white text-white hover:bg-red-500 hover:border-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none",
                             disabled: pointsCount === 0 
                         }, e(IconUndo, { width: 24, height: 24 })),
-                        e('button', { onClick: handleFinish, className: "px-6 py-2 rounded-full bg-[#22c55e] text-white font-bold hover:bg-green-600 transition focus:outline-none", disabled: pointsCount < 3 }, "Use Outline")
+                        e('button', { onClick: handleFinish, className: "px-6 py-2 rounded-full border-2 border-white text-white hover:bg-white hover:text-black transition font-bold text-sm md:text-base focus:outline-none", disabled: pointsCount < 3 }, "Use Outline")
                     )
                 )
             );
         };
 
-        // --- FinalPoster (修正版：修复元素不显示问题并添加手写功能) ---
+        // --- FinalPoster ---
         const FinalPoster = ({ pieces, containerWidth, containerHeight, onClose, onNewTree, onSendToForest }) => {
-            const canvasRef = useRef(null);        // 树木层
-            const drawingCanvasRef = useRef(null); // 手写层
+            const canvasRef = useRef(null);
+            const drawingCanvasRef = useRef(null);
             const [isDrawing, setIsDrawing] = useState(false);
             const dpr = window.devicePixelRatio || 1;
 
-            // 辅助：绘制预览画面
             const renderPreview = () => {
                 const canvas = canvasRef.current;
                 if (!canvas) return;
                 const ctx = canvas.getContext('2d');
                 
-                // 设置缩放
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 
-                // 1. 预览时绘制浅灰色背景
-                ctx.fillStyle = '#f3f4f6'; // Tailwind gray-100
+                ctx.fillStyle = '#f3f4f6';
                 ctx.fillRect(0, 0, containerWidth, containerHeight);
                 
-                // 2. 绘制所有装饰品和树
                 pieces.forEach(piece => {
                     const { body, img, width, height } = piece;
                     if (!body) return;
@@ -456,7 +467,6 @@
                     if (img && img.complete && img.naturalWidth !== 0) {
                         ctx.drawImage(img, -width / 2, -height / 2, width, height);
                     } else {
-                        // 回退方案：如果图片没加载好，画个色块
                         ctx.fillStyle = body.label === 'Star' ? '#ef4444' : '#22c55e';
                         ctx.beginPath();
                         ctx.arc(0, 0, width / 2, 0, Math.PI * 2);
@@ -466,7 +476,6 @@
                 });
             };
 
-            // 初始化 Canvas 大小并渲染
             useEffect(() => {
                 if (canvasRef.current && drawingCanvasRef.current) {
                     [canvasRef.current, drawingCanvasRef.current].forEach(cvs => {
@@ -477,7 +486,6 @@
                 }
             }, [pieces, containerWidth, containerHeight]);
 
-            // --- 绘图逻辑 ---
             const getMousePos = (e) => {
                 const rect = drawingCanvasRef.current.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -501,48 +509,62 @@
                 const pos = getMousePos(e);
                 const ctx = drawingCanvasRef.current.getContext('2d');
                 ctx.lineTo(pos.x, pos.y);
-                ctx.strokeStyle = '#374151'; // 深灰色画笔
+                ctx.strokeStyle = '#374151';
                 ctx.lineWidth = 3 * dpr;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
                 ctx.stroke();
             };
 
-            // --- 合成导出 ---
-            const exportImage = (withBg) => {
+            const exportImage = (withBackground = true) => {
+                const dpr = window.devicePixelRatio || 1;
+                const margin = withBackground ? 40 : 0; 
+
                 const tempCvs = document.createElement('canvas');
-                tempCvs.width = containerWidth * dpr;
-                tempCvs.height = containerHeight * dpr;
+                tempCvs.width = (containerWidth + margin * 2) * dpr;
+                tempCvs.height = (containerHeight + margin * 2) * dpr;
                 const tempCtx = tempCvs.getContext('2d');
 
-                if (withBg) {
-                    tempCtx.fillStyle = '#f3f4f6';
+                if (withBackground) {
+                    tempCtx.fillStyle = '#FFFFFF';
                     tempCtx.fillRect(0, 0, tempCvs.width, tempCvs.height);
+
+                    tempCtx.fillStyle = '#f3f4f6'; 
+                    tempCtx.fillRect(margin * dpr, margin * dpr, containerWidth * dpr, containerHeight * dpr);
+                } else {
+                    tempCtx.clearRect(0, 0, tempCvs.width, tempCvs.height);
                 }
 
-                // 重点：重新绘制树（不带背景）
+                tempCtx.save();
+                tempCtx.translate(margin * dpr, margin * dpr);
+
                 pieces.forEach(piece => {
                     const { body, img, width, height } = piece;
+                    if (!body) return;
                     tempCtx.save();
                     tempCtx.translate(body.position.x * dpr, body.position.y * dpr);
                     tempCtx.rotate(body.angle);
-                    if (img) tempCtx.drawImage(img, (-width / 2) * dpr, (-height / 2) * dpr, width * dpr, height * dpr);
+                    if (img) {
+                        tempCtx.drawImage(img, (-width / 2) * dpr, (-height / 2) * dpr, width * dpr, height * dpr);
+                    }
                     tempCtx.restore();
                 });
 
-                // 叠加用户涂鸦层
-                tempCtx.drawImage(drawingCanvasRef.current, 0, 0);
+                if (drawingCanvasRef.current) {
+                    tempCtx.drawImage(drawingCanvasRef.current, 0, 0, containerWidth * dpr, containerHeight * dpr);
+                }
+
+                tempCtx.restore();
                 return tempCvs.toDataURL('image/png');
             };
 
             return (
                 e('div', { className: "fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4" },
-                    e('div', { className: "bg-white p-4 max-w-lg w-full shadow-2xl relative flex flex-col" },
+                    e('div', { className: "bg-white p-4 max-w-lg w-full relative flex flex-col" },
                         e('button', { onClick: onClose, className: "absolute -top-10 right-0 text-white text-3xl" }, "×"),
                         
-                        e('div', { className: "mb-2 text-center text-xs font-bold text-gray-400 uppercase tracking-widest" }, "Draw something to decorate!"),
+                        e('div', { className: "mb-2 text-center text-xs font-bold text-gray-400 uppercase tracking-widest" }, "Draw something. Or don't."),
 
-                        // Canvas 容器
                         e('div', { 
                             className: "relative bg-gray-100",
                             style: { 
@@ -575,13 +597,14 @@
                              }, "Redraw"),
                              e('button', { 
                                  onClick: () => {
-                                     const link = document.createElement('a');
-                                     link.href = exportImage(true);
-                                     link.download = 'ThisYearsChristmasTree.png';
-                                     link.click();
+                                    const link = document.createElement('a');
+                                    link.href = exportImage(true);
+                                    link.download = 'ThisYearsChristmasTree.png';
+                                    link.click();
                                  },
                                  className: "px-6 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none"
                              }, "Download"),
+
                              e('button', { 
                                  onClick: () => onSendToForest(exportImage(false), containerWidth, containerHeight),
                                  className: "px-4 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none"
@@ -598,15 +621,12 @@
             const containerRef = useRef(null);
             const bodiesRef = useRef([]); 
             
-            // 🚀 MODIFICATION 1: KEYWORDS 
             const KEYWORDS = [
                 "Unnecessary Patience", "Fights with Gemini", "For Fun", "Overthinking", 
                 "Random Ideas", "Process-Driven","Why Not","Figma","Code",
-                "Love", "Hope", "2025", "xyxy",
+                "Love", "Hope", "2025", "Claude","interest",
                 "Create", "Design", "Magic", "Memories"
             ];
-
-            // 🚀 MODIFICATION 2: Removed showBTTOverlay
 
             useEffect(() => {
                 const canvas = canvasRef.current;
@@ -621,10 +641,11 @@
 
                 const initBodies = (logicalWidth) => {
                     const bodies = [];
-                    const NUM_SHAPES = 24;
+                    const isMobile = window.innerWidth < 768;
+                    const NUM_SHAPES = isMobile ? 21 : 24;
                     const SPAWN_X_CENTER = logicalWidth / 2;
-                    const MIN_RADIUS = 30;
-                    const MAX_RADIUS = 60;
+                    const MIN_RADIUS = isMobile ? 25 : 35; 
+                    const MAX_RADIUS = isMobile ? 60 : 70;
                     
                     for (let i = 0; i < NUM_SHAPES; i++) {
                         const radius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS);
@@ -683,6 +704,36 @@
 
                 const GRAVITY = 0.8;
                 let frameCount = 0;
+                let starHovered = false; // 跟踪星星悬停状态
+                let pulseTime = 0; // 闪烁时间
+
+                // 鼠标移动检测
+                const handleMouseMove = (e) => {
+                    if (!isBTT) {
+                        starHovered = false;
+                        canvas.style.cursor = 'default';
+                        return;
+                    }
+                    
+                    const rect = canvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    const starBody = bodiesRef.current.find(b => b.isStar);
+                    if (starBody && starBody.active) {
+                        const dx = starBody.x - mouseX;
+                        const dy = starBody.y - mouseY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < starBody.radius) {
+                            starHovered = true;
+                            canvas.style.cursor = 'pointer';
+                        } else {
+                            starHovered = false;
+                            canvas.style.cursor = 'default';
+                        }
+                    }
+                };
 
                 const loop = () => {
                     const logicalW = canvas.width / dpr;
@@ -691,6 +742,7 @@
 
                     ctx.clearRect(0, 0, logicalW, logicalH); 
                     frameCount++;
+                    pulseTime += 0.016; // 增加时间用于脉冲效果
 
                     const activeBodies = bodiesRef.current.filter(b => b.active || frameCount > b.delay && (b.active = true));
 
@@ -763,78 +815,67 @@
                         ctx.save();
                         ctx.translate(b.x, b.y);
                         
-                        const scaleX = Math.cos(b.flipProgress * Math.PI);
-                        ctx.scale(Math.abs(scaleX), 1);
+                        // 如果是星星且在BTT模式，应用轻微脉冲效果
+                        if (b.isStar && isBTT && b.flipProgress > 0.5) {
+                            const pulse = 0.98 + Math.sin(pulseTime * Math.PI * 0.5) * 0.02; // 0.96 到 1.0，更subtle
+                            ctx.globalAlpha = 0.92 + Math.sin(pulseTime * Math.PI * 0.5) * 0.08; // 0.84 到 1.0
+                            const scaleX = Math.cos(b.flipProgress * Math.PI) * pulse;
+                            ctx.scale(Math.abs(scaleX), pulse);
+                        } else {
+                            const scaleX = Math.cos(b.flipProgress * Math.PI);
+                            ctx.scale(Math.abs(scaleX), 1);
+                        }
+                        
                         ctx.rotate(b.angle);
                         
                         const isBack = b.flipProgress > 0.5;
-                        const blackColor = '#000000'; // Black color for border/non-star text
+                        const blackColor = '#000000';
                         
                         if (isBack) {
-                            ctx.fillStyle = '#FFFFFF'; 
-                            ctx.strokeStyle = '#000000';
-                            ctx.lineWidth = 2;
-                            
-                            // 1. 绘制背景/元素形状 (白色填充，黑色边框)
                             if (b.isStar) {
-                                // Draw White Fill 
-                                drawStarFixed(ctx, b.radius, '#FFFFFF');
+                                // BTT模式下的星星：默认黑底白字，悬停时白底黑字
+                                const isHovering = isBTT && starHovered;
+                                const starFillColor = isHovering ? '#ff5e00' : '#000000';
+                                const starTextColor = isHovering ? 'white' : 'white';
                                 
-                                // Draw Black Border
-                                ctx.save();
-                                ctx.strokeStyle = blackColor;
-                                ctx.lineWidth = 2;
-                                ctx.lineJoin = 'round';
-                                ctx.beginPath();
-                                // Redraw path to stroke
-                                drawStarFixed(ctx, b.radius, blackColor); 
-                                ctx.stroke();
-                                ctx.restore();
-
+                                // 绘制星星填充
+                                drawStarFixed(ctx, b.radius, starFillColor);
+                                
+                                // 绘制文字
+                                ctx.fillStyle = starTextColor; 
+                                ctx.font = `700 ${Math.max(10, b.radius * 0.5)}px Inter`;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(b.word, 0, 0);
                             } else {
-                                // Sphere front face (White Sphere with Black Border)
+                                // 普通圆球：白底黑边黑字
+                                ctx.fillStyle = '#FFFFFF'; 
+                                ctx.strokeStyle = '#000000';
+                                ctx.lineWidth = 2;
                                 
-                                // Draw White Fill
                                 ctx.fillStyle = '#FFFFFF';
                                 ctx.beginPath();
                                 ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
                                 ctx.fill();
 
-                                // Draw Black Border
                                 ctx.strokeStyle = blackColor;
                                 ctx.lineWidth = 2;
                                 ctx.beginPath();
                                 ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
                                 ctx.stroke();
+                                
+                                ctx.fillStyle = blackColor;
+                                ctx.font = `700 ${Math.max(10, b.radius * 0.35)}px Inter`;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(b.word, 0, 0);
                             }
 
-                            // 2. 绘制文字 (修正可读性，星星为白色)
-                            
-                            // 🚀 修正 2: 星星文字为白色，其他为黑色
-                            ctx.fillStyle = b.isStar ? '#FFFFFF' : blackColor; 
-                            
-                            ctx.font = `700 ${Math.max(10, b.radius * (b.isStar ? 0.5 : 0.35))}px Inter`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            
-                            // 🚀 修正 1: 确保文字反向时仍可读 (Fixes mirroring)
-                            ctx.save();
-                           
-                            const maxTextWidth = b.radius * 1.8;
-                            let displayWord = b.word;
-                            
-                            
-                            ctx.fillText(displayWord, 0, 0);
-                            ctx.restore(); // 恢复文字的反转状态
-                            
-
                         } else {
-                            // Front face (Original Colors and Shapes)
+                            // 正面：红星或绿球
                             if (b.isStar) {
-                                // Star front face (Red Star)
                                 drawStarFixed(ctx, b.radius, b.color); 
                             } else {
-                                // Sphere front face (Green Sphere)
                                 ctx.fillStyle = b.color;
                                 ctx.beginPath();
                                 ctx.ellipse(0, 0, b.radius, b.radius * 0.95, 0, 0, Math.PI * 2);
@@ -848,7 +889,6 @@
                     animationId = requestAnimationFrame(loop);
                 };
 
-                // Star click handler for BTT mode
                 const handleCanvasClick = (e) => {
                     if (!isBTT) return;
                     
@@ -857,7 +897,6 @@
                     const clickY = e.clientY - rect.top;
                     const dpr = window.devicePixelRatio || 1;
                     
-                    // Normalize to logical coordinates
                     const logicalX = clickX; 
                     const logicalY = clickY; 
 
@@ -868,7 +907,6 @@
                         const dy = starBody.y - logicalY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         
-                        // Check if click is within the star's bounding circle (radius)
                         if (distance < starBody.radius) {
                             window.location.href = 'https://xyxyspace.github.io/';
                         }
@@ -876,20 +914,21 @@
                 };
                 
                 canvas.addEventListener('click', handleCanvasClick);
+                canvas.addEventListener('mousemove', handleMouseMove);
 
                 return () => {
                     resizeObserver.disconnect();
                     if (animationId) cancelAnimationFrame(animationId);
-                    canvas.removeEventListener('click', handleCanvasClick); // Clean up
+                    canvas.removeEventListener('click', handleCanvasClick);
+                    canvas.removeEventListener('mousemove', handleMouseMove);
                 };
             }, [isDesktop, isBTT]); 
 
             return (
                 e('div', { className: `relative w-full h-full flex flex-col justify-between` }, 
                     
-                    // Title (Content adjusted for BTT mode, removed showBTTOverlay)
                     e('div', { className: "absolute top-0 left-0 w-full max-w-lg z-10 pointer-events-none px-8 pt-8 md:p-8 animate-fade-in" }, 
-                        e('h1', { className: `italic leading-tight mb-4 ${isBTT ? 'text-5xl md:text-7xl text-black' : 'text-5xl md:text-7xl text-black'}` }, 
+                        e('h1', { className: `italic leading-tight mb-4 text-5xl md:text-7xl lg:text-8xl text-black` }, 
                             isBTT ? "Behind The Tree" : 
                             e(React.Fragment, null, 
                                 "This year's ", 
@@ -897,12 +936,11 @@
                                 " Christmas Tree"
                             )
                         ),
-                         isBTT && e('p', { className: "text-base md:text-xl font-sans mt-2 text-gray-500 pointer-events-auto" }, 
-                                ""
+                         isBTT && e('p', { className: "text-lg md:text-xl lg:text-2xl font-sans mt-2 text-gray-500 pointer-events-auto" }, 
+                                e('span', { className: "block mb-2" }, ""),
+
                          )
                     ),
-
-                    // Removed BTT Content Overlay (showBTTOverlay logic)
                     
                     e('div', { className: `flex-1 relative z-0`, ref: containerRef }, 
                         e('canvas', { ref: canvasRef, className: "block w-full h-full" })
@@ -934,8 +972,8 @@
                 gameFinishedRef.current = gameFinished; 
             }, [placedPieces, gameFinished]); 
             
-            const GROUND_THICKNESS = 10; 
-            const WALL_THICKNESS = 50; 
+            const GROUND_THICKNESS = 15; 
+            const WALL_THICKNESS = 60; 
             const INITIAL_Y_POS = -50; 
 
             const commonPieceProps = {
@@ -1053,25 +1091,22 @@
                     ctx.clearRect(0, 0, cw, ch);
 
                     const allPieces = placedPiecesRef.current; 
-                    const hasPieces = allPieces.length > 0; // 检查是否已放置任何元素
+                    const hasPieces = allPieces.length > 0;
 
-                    // 背景指引的树形状（无透明度，在第一个元素落下后消失）
                     if (!hasPieces) {
                         const groundLevel = ch - GROUND_THICKNESS / 2;
 
                         ctx.save();
-                        // ctx.globalAlpha = 1.0; 
-                        ctx.fillStyle = '#22c55e'; // Green color
+                        ctx.fillStyle = '#22c55e';
                         
-                        // Define tree shape coordinates (e.g., a cone)
                         const padding = 50; 
                         const baseWidth = cw - 2 * padding;
                         const coneTopY = 50;
                         
                         ctx.beginPath();
-                        ctx.moveTo(cw / 2, coneTopY); // Top center
-                        ctx.lineTo(cw / 2 + baseWidth / 2, groundLevel); // Bottom right 
-                        ctx.lineTo(cw / 2 - baseWidth / 2, groundLevel); // Bottom left 
+                        ctx.moveTo(cw / 2, coneTopY);
+                        ctx.lineTo(cw / 2 + baseWidth / 2, groundLevel);
+                        ctx.lineTo(cw / 2 - baseWidth / 2, groundLevel);
                         ctx.closePath();
                         ctx.fill();
                         ctx.restore();
@@ -1091,7 +1126,6 @@
                         } else {
                             ctx.fillStyle = body.label === 'Star' ? '#ef4444' : (body.label === 'RandomSphere' ? '#22c55e' : '#60a5fa');
                             if (body.label === 'Star') {
-                                // 使用统一的 Star 绘制函数
                                 drawStarFixed(ctx, width/2, ctx.fillStyle); 
                             } else if (body.label === 'RandomSphere') {
                                 ctx.beginPath();
@@ -1175,9 +1209,7 @@
                         Runner.stop(runnerRef.current);
                     }
                     if (engineRef.current) {
-                        // 核心修复：修复 Matter.js 清理时的 TypeError
                         Events.off(engineRef.current, 'beforeUpdate', keepDynamic); 
-                        // 确保清除所有物理实体
                         World.clear(engineRef.current.world, true);
                         Engine.clear(engineRef.current);
                     }
@@ -1198,8 +1230,8 @@
                 
                 const cw = containerRef.current.clientWidth;
                 
-                const MIN_RADIUS = 30; 
-                const MAX_RADIUS = 60; 
+                const MIN_RADIUS = 35;
+                const MAX_RADIUS = 65;
                 const baseRadius = MIN_RADIUS + Math.random() * (MAX_RADIUS - MIN_RADIUS); 
                 const yScale = 0.8 + Math.random() * 0.4; 
                 
@@ -1396,16 +1428,16 @@
             return (
                 e('div', { className: `relative w-full h-full bg-white flex flex-col justify-between` },
                     
-                    e('div', { className: "flex justify-center gap-x-8 items-center p-4 z-20 w-full bg-white/50 backdrop-blur-sm" },
+                    e('div', { className: "flex justify-center gap-x-6 md:gap-x-10 items-center p-4 md:p-6 z-20 w-full bg-white/50 backdrop-blur-sm" },
                         e('button', { 
                             onClick: spawnRandomSphere, 
-                            className: "hover:opacity-70 transition text-black p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            className: "hover:opacity-70 transition text-black p-3 md:p-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
                             disabled: tracingImage || gameFinished || !isEngineReady 
                         }, e(IconSphere, { className: "text-[#22c55e]" })), 
                         
 
                         e('label', { 
-                            className: `cursor-pointer hover:opacity-70 transition text-black p-3 focus:outline-none ${tracingImage || gameFinished || !isEngineReady ? 'opacity-50 cursor-not-allowed' : ''}` 
+                            className: `cursor-pointer hover:opacity-70 transition text-black p-3 md:p-4 focus:outline-none ${tracingImage || gameFinished || !isEngineReady ? 'opacity-50 cursor-not-allowed' : ''}` 
                         },
                             e(IconPlus, null),
                             e('input', { 
@@ -1419,13 +1451,13 @@
                         
                         e('button', { 
                             onClick: handleUndo, 
-                            className: "hover:opacity-70 transition text-black p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            className: "hover:opacity-70 transition text-black p-3 md:p-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
                             disabled: (placedPieces.length === 0 && !currentPiece) || gameFinished || !isEngineReady 
                         }, e(IconUndo, null)),
 
                         e('button', { 
                             onClick: handleFinish, 
-                            className: "hover:opacity-70 transition text-red-500 p-3 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
+                            className: "hover:opacity-70 transition text-red-500 p-3 md:p-4 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
                             disabled: gameFinished || (placedPieces.length === 0 && !currentPiece) || !isEngineReady 
                         }, e(IconStar, null))
                     ),
@@ -1440,7 +1472,7 @@
                         })
                     ),
 
-                    e('div', { className: "w-full flex justify-center gap-x-8 items-center border-t-2 border-gray-900 py-3 text-black bg-white/50 backdrop-blur-sm z-20" },
+                    e('div', { className: "w-full flex justify-center gap-x-6 md:gap-x-10 items-center border-t-2 md:border-t-3 border-gray-900 py-4 md:py-5 text-black bg-white/50 backdrop-blur-sm z-20" },
                         e('button', { 
                             onClick: () => move(-1), 
                             className: "p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none", 
@@ -1476,235 +1508,207 @@
             );
         };
 
-        // --- ForestTreeItem (Adjusted control menu styling) ---
-        const ForestTreeItem = ({ tree, onDelete, onUpdate, isMine }) => { // 🚀 这里多了 isMine
-            const isDragging = useRef(false);
-            const lastPos = useRef({ x: 0, y: 0 });
-
-            const getClientPos = (e) => {
-                const event = e.touches && e.touches.length > 0 ? e.touches[0] : e;
-                return { x: event.clientX, y: event.clientY };
-            }
-
-            const handleStart = useCallback((e) => {
-                if (!isMine) return; // 🔒 关键：如果不是我的新树，不许动
-                e.preventDefault();
-                isDragging.current = true;
-                lastPos.current = getClientPos(e);
-            }, [isMine]);
-
-            const handleMove = useCallback((e) => {
-                if (!isDragging.current || !isMine) return;
-                const currentPos = getClientPos(e);
-                const dx = (currentPos.x - lastPos.current.x) / 1; // 这里可以根据缩放调整灵敏度
-                const dy = (currentPos.y - lastPos.current.y) / 1;
-                
-                onUpdate(tree.id, { x: tree.x + dx, y: tree.y + dy });
-                lastPos.current = currentPos;
-            }, [isMine, tree.id, tree.x, tree.y, onUpdate]);
-
-            const handleEnd = useCallback(async () => {
-                if (isDragging.current && isMine) {
-                    isDragging.current = false;
-                    // 🚀 保存最终位置到 Supabase
-                    await supabase.from('forest').update({ x: tree.x, y: tree.y }).eq('id', tree.id);
-                }
-            }, [isMine, tree.id, tree.x, tree.y]);
-
-            useEffect(() => {
-                if (isDragging.current) {
-                    window.addEventListener('mousemove', handleMove);
-                    window.addEventListener('mouseup', handleEnd);
-                    window.addEventListener('touchmove', handleMove);
-                    window.addEventListener('touchend', handleEnd);
-                }
-                return () => {
-                    window.removeEventListener('mousemove', handleMove);
-                    window.removeEventListener('mouseup', handleEnd);
-                    window.removeEventListener('touchmove', handleMove);
-                    window.removeEventListener('touchend', handleEnd);
-                };
-            }, [handleMove, handleEnd]);
-
-            return (
-                e('div', {
-                    style: {
-                        left: `${tree.x}px`,
-                        top: `${tree.y}px`,
-                        position: 'absolute',
-                        transform: `translate(-50%, -50%) rotate(${tree.rotation || 0}deg)`,
-                        cursor: isMine ? 'grab' : 'default',
-                        touchAction: 'none'
-                    },
-                    onMouseDown: handleStart,
-                    onTouchStart: handleStart,
-                },
-                    e('img', {
-                        src: tree.dataURL,
-                        style: { width: `${tree.width}px`, height: 'auto' },
-                        draggable: false
-                    }),
-                    // 🔒 只有刚上传的人能看到删除按钮
-                    isMine && e('button', {
-                        onClick: (e) => { e.stopPropagation(); onDelete(tree.id); },
-                        className: "absolute -top-10 left-1/2 -translate-x-1/2 p-2 bg-white rounded-full shadow-lg text-red-500"
-                    }, e(IconTrash))
-                )
-            );
-        };
-
-        // --- ForestGallery (Style changes and Focus logic added) ---
         // --- ForestGallery ---
-        const ForestGallery = ({ trees, onBack, setTrees, lastAddedTreeId }) => {
-            const containerRef = useRef(null);
-            const [scale, setScale] = useState(0.8); 
-            const [offset, setOffset] = useState({ x: 0, y: 0 }); 
-            const isDragging = useRef(false);
-            const lastPos = useRef({ x: 0, y: 0 });
-            const virtualSize = 5000;
-            const virtualCenter = virtualSize / 2;
+       const ForestGallery = ({ onBack, newTreeId }) => {
+    const [trees, setTrees] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [scale, setScale] = React.useState(0.5);
+    const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+    const [isConfirmed, setIsConfirmed] = React.useState(false); // 新增：确认状态
+    const containerRef = React.useRef(null);
+    const isDraggingCanvas = React.useRef(false);
+    const isDraggingNewTree = React.useRef(false);
+    const lastPos = React.useRef({ x: 0, y: 0 });
+    const lastTouchDist = React.useRef(0);
 
-            // 1. 进入森林时从数据库抓取所有树
-            useEffect(() => {
-                const fetchAll = async () => {
-                    const { data, error } = await supabase.from('forest').select('*');
-                    if (!error && data) setTrees(data);
-                };
-                fetchAll();
-            }, []);
+    const [showHint, setShowHint] = React.useState(true);
+    const hideHint = () => { if (showHint) setShowHint(false); };
 
-            // 2. 初始居中和聚焦逻辑 (修复了 containerW 未定义)
-            useEffect(() => {
-                const container = containerRef.current;
-                if (!container) return;
-
-                const containerW = container.clientWidth;
-                const containerH = container.clientHeight;
+    React.useEffect(() => {
+        const fetchTrees = async () => {
+            try {
+                const { data, error } = await mySupabase.from('forest').select('*');
+                if (error) throw error;
+                setTrees(data || []);
                 
-                let targetX = virtualCenter;
-                let targetY = virtualCenter;
-                let initialZoom = 0.8; 
-
-                if (lastAddedTreeId) {
-                    const newTree = trees.find(t => String(t.id) === String(lastAddedTreeId));
-                    if (newTree) {
-                        targetX = newTree.x;
-                        targetY = newTree.y;
-                        initialZoom = Math.min(2.0, (newTree.scale || 1) * 1.5);
+                if (newTreeId && data) {
+                    const mine = data.find(t => t.id === newTreeId);
+                    if (mine) {
+                        setOffset({
+                            x: window.innerWidth / 2 - (mine.x * 0.5),
+                            y: window.innerHeight / 2 - (mine.y * 0.5)
+                        });
                     }
                 }
-                
-                if (containerW > 0 && containerH > 0) {
-                    setScale(initialZoom);
-                    setOffset({ 
-                        x: containerW / 2 - targetX * initialZoom,
-                        y: containerH / 2 - targetY * initialZoom
-                    });
-                }
-            }, [trees.length, lastAddedTreeId]);
-
-            const getClientPos = (e) => {
-                 const event = e.touches && e.touches.length > 0 ? e.touches[0] : e;
-                 return { x: event.clientX, y: event.clientY };
-            };
-
-            const handleStart = (e) => {
-                if (e.target.closest('.tree-item-controls')) return; 
-                isDragging.current = true;
-                lastPos.current = getClientPos(e);
-            };
-
-            const handleMove = (e) => {
-                if (!isDragging.current) return;
-                const currentPos = getClientPos(e);
-                const dx = currentPos.x - lastPos.current.x;
-                const dy = currentPos.y - lastPos.current.y;
-                setOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
-                lastPos.current = currentPos;
-            };
-
-            const handleEnd = () => { isDragging.current = false; };
-
-            const handleWheel = (e) => {
-                e.preventDefault();
-                const zoomFactor = 1 - e.deltaY * 0.001;
-                const newScale = Math.max(0.05, Math.min(2.0, scale * zoomFactor));
-                const rect = containerRef.current.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
-                const worldX = (mouseX - offset.x) / scale;
-                const worldY = (mouseY - offset.y) / scale;
-                setOffset({ x: mouseX - worldX * newScale, y: mouseY - worldY * newScale });
-                setScale(newScale);
-            };
-
-            useEffect(() => {
-                const c = containerRef.current;
-                if (c) c.addEventListener('wheel', handleWheel, { passive: false });
-                return () => c && c.removeEventListener('wheel', handleWheel);
-            }, [handleWheel]);
-
-            return (
-                e('div', { className: "w-full h-[100dvh] relative overflow-hidden bg-white" }, 
-                    e('div', {
-                        ref: containerRef,
-                        className: "absolute inset-0 cursor-grab", 
-                        onMouseDown: handleStart,
-                        onMouseMove: handleMove,
-                        onMouseUp: handleEnd,
-                        onMouseLeave: handleEnd,
-                        onTouchStart: handleStart,
-                        onTouchMove: handleMove,
-                        onTouchEnd: handleEnd,
-                        style: { touchAction: 'none' } 
-                    },
-                        e('div', {
-                            style: {
-                                width: `${virtualSize}px`,
-                                height: `${virtualSize}px`,
-                                transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
-                                transformOrigin: '0 0',
-                                position: 'absolute',
-                            }
-                        },
-                            trees.map(tree => 
-                                e(ForestTreeItem, { 
-                                    key: tree.id, 
-                                    tree: tree, 
-                                    isMine: lastAddedTreeId && String(tree.id) === String(lastAddedTreeId),
-                                    onDelete: async (id) => {
-                                        await supabase.from('forest').delete().eq('id', id);
-                                        setTrees(prev => prev.filter(t => t.id !== id));
-                                    },
-                                    onUpdate: (id, updates) => {
-                                        setTrees(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-                                    }
-                                })
-                            )
-                        )
-                    ),
-                    e('button', { 
-                        onClick: onBack, 
-                        className: "absolute top-4 left-4 p-3 rounded-full border-2 border-black bg-white z-50 shadow-md" 
-                    }, "Back"),
-                    e('div', { className: "absolute top-4 right-4 z-50 text-sm font-medium" }, `Zoom: ${(scale * 100).toFixed(0)}%`)
-                )
-            );
+            } catch (err) {
+                console.error('Fetch error:', err);
+            } finally {
+                setLoading(false);
+            }
         };
+        fetchTrees();
+    }, [newTreeId]);
+
+    const handleZoom = React.useCallback((delta, clientX, clientY) => {
+        hideHint();
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = clientX - rect.left, y = clientY - rect.top;
+        setScale(prev => {
+            const next = Math.max(0.05, Math.min(2, prev * Math.pow(1.1, delta / 100)));
+            setOffset(off => ({
+                x: x - ((x - off.x) / prev) * next,
+                y: y - ((y - off.y) / prev) * next
+            }));
+            return next;
+        });
+    }, []);
+
+    React.useEffect(() => {
+        const c = containerRef.current;
+        const wheel = (e) => { e.preventDefault(); handleZoom(-e.deltaY, e.clientX, e.clientY); };
+        c.addEventListener('wheel', wheel, { passive: false });
+        return () => c.removeEventListener('wheel', wheel);
+    }, [handleZoom]);
+
+    const handleStart = (e) => {
+        hideHint();
+        const p = e.touches ? e.touches[0] : e;
+        if (e.touches?.length === 2) {
+            lastTouchDist.current = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            return;
+        }
+        // 只有未确认时才能拖动新树
+        if (e.target.dataset.type === 'move-handle' && !isConfirmed) isDraggingNewTree.current = true;
+        else isDraggingCanvas.current = true;
+        lastPos.current = { x: p.clientX, y: p.clientY };
+    };
+
+    const handleMove = (e) => {
+        const p = e.touches ? e.touches[0] : e;
+        const dx = p.clientX - lastPos.current.x, dy = p.clientY - lastPos.current.y;
+
+        if (e.touches?.length === 2) {
+            e.preventDefault();
+            const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            handleZoom((d - lastTouchDist.current) * 2, (e.touches[0].clientX + e.touches[1].clientX)/2, (e.touches[0].clientY + e.touches[1].clientY)/2);
+            lastTouchDist.current = d;
+            return;
+        }
+
+        if (isDraggingNewTree.current && !isConfirmed) {
+            setTrees(prev => prev.map(t => t.id === newTreeId ? { ...t, x: t.x + dx/scale, y: t.y + dy/scale } : t));
+        } else if (isDraggingCanvas.current) {
+            setOffset(off => ({ x: off.x + dx, y: off.y + dy }));
+        }
+        lastPos.current = { x: p.clientX, y: p.clientY };
+    };
+
+    const handleEnd = async () => {
+        if (isDraggingNewTree.current && !isConfirmed) {
+            const mine = trees.find(t => t.id === newTreeId);
+            if (mine) await mySupabase.from('forest').update({ x: mine.x, y: mine.y }).eq('id', mine.id);
+        }
+        isDraggingCanvas.current = isDraggingNewTree.current = false;
+        lastTouchDist.current = 0;
+    };
+
+    const handleConfirm = () => {
+        setIsConfirmed(true);
+        hideHint();
+    };
+
+    return e('div', { className: "fixed inset-0 bg-[#F0F2F5] z-50 overflow-hidden" },
+        e('div', {
+            ref: containerRef,
+            className: "w-full h-full relative touch-none cursor-grab active:cursor-grabbing",
+            onMouseDown: handleStart, onMouseMove: handleMove, onMouseUp: handleEnd,
+            onTouchStart: handleStart, onTouchMove: handleMove, onTouchEnd: handleEnd
+        },
+            e('div', { 
+                style: { transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`, transformOrigin: '0 0' }, 
+                className: "absolute top-0 left-0" 
+            },
+                trees.map((t) => {
+                    const isMine = t.id === newTreeId;
+                    return e('div', {
+                        key: t.id,
+                        style: { 
+                            position: 'absolute', left: t.x, top: t.y, 
+                            width: (t.width || 300) * (t.scale || 1), 
+                            transform: `rotate(${t.rotation || 0}deg)`,
+                            zIndex: isMine ? 100 : 1 
+                        }
+                    }, 
+                        e('img', { 
+                            src: t.dataURL, 
+                            className: "w-full h-auto pointer-events-none select-none",
+                        }),
+                        
+                        // 只有未确认时显示控制按钮
+                        isMine && !isConfirmed && e('div', { className: "absolute -top-16 md:-top-20 left-0 w-full flex justify-between items-center px-2" },
+                            e('button', {
+                                onClick: async (ev) => {
+                                    ev.stopPropagation();
+                                    if(confirm("Delete your tree?")) {
+                                        await mySupabase.from('forest').delete().eq('id', t.id);
+                                        onBack();
+                                    }
+                                },
+                                className: "bg-white text-red-500 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-2xl md:text-3xl shadow-lg hover:scale-110 transition"
+                            }, "✕"),
+                            e('div', { 
+                                'data-type': 'move-handle', 
+                                className: "bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-full text-sm md:text-base cursor-move font-bold shadow-lg hover:bg-blue-600 transition" 
+                            }, "✥ MOVE"),
+                            e('button', {
+                                onClick: (ev) => {
+                                    ev.stopPropagation();
+                                    handleConfirm();
+                                },
+                                className: "bg-green-500 text-white w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-2xl md:text-3xl shadow-lg hover:scale-110 hover:bg-green-600 transition"
+                            }, "✓")
+                        )
+                    );
+                })
+            ),
+
+            showHint && !isConfirmed && e('div', { 
+                className: "absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-500",
+                style: { opacity: showHint ? 1 : 0 }
+            }, 
+                e('div', { className: "text-gray-400 font-['Inter'] text-base md:text-xl lg:text-2xl tracking-widest uppercase flex flex-col items-center gap-6" },
+                    e('span', null, "Drag to explore · Scroll to zoom"),
+                    e('div', { className: "w-10 h-10 md:w-12 md:h-12 border-2 md:border-3 border-gray-300 rounded-full flex items-center justify-center animate-bounce text-xl md:text-2xl" }, "↕")
+                )
+            ),
+            
+            // 左上角返回按钮
+            e('button', {
+                onClick: onBack,
+                className: "absolute top-4 left-4 md:top-6 md:left-6 w-14 h-14 md:w-16 md:h-16 bg-white rounded-full flex items-center justify-center text-2xl md:text-3xl z-[110] shadow-lg hover:scale-110 transition"
+            }, "✕"),
+
+            // 确认后显示提示
+            isConfirmed && e('div', {
+                className: "absolute top-4 right-4 md:top-6 md:right-6 bg-green-500 text-white px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-bold shadow-lg z-[110] animate-fade-in"
+            }, "✓ Tree planted in the forest!")
+        )
+    );
+};
 
         // --- App ---
         const App = () => {
-            const [view, setView] = useState('HOME'); // 'HOME', 'BTT', 'FOREST'
+            const [view, setView] = useState('HOME');
             const [isDesktop, setIsDesktop] = useState(true);
             const [showFinal, setShowFinal] = useState(false); 
             const [finalPieces, setFinalPieces] = useState([]); 
             const [gameContainerSize, setGameContainerSize] = useState({ width: 0, height: 0 }); 
             const [gameKey, setGameKey] = useState(0); 
-            const [lastAddedTreeId, setLastAddedTreeId] = useState(null); 
+            const [lastAddedTreeId, setLastAddedTreeId] = React.useState(null);
             
             const appRef = useRef(null); 
             
-            // 使用 localStorage 存储树木数据
             const [submittedTrees, setSubmittedTrees] = useState(() => {
                 try {
                     const stored = localStorage.getItem('forestTrees');
@@ -1736,16 +1740,14 @@
                 setGameContainerSize({ width, height });
             }, []);
 
-            // 修复：关闭海报/新一棵树时，异步滚动回顶部并重置游戏
             const handleCloseFinal = useCallback(() => {
                 setShowFinal(false); 
                 setFinalPieces([]);
-                setGameKey(prev => prev + 1); // 重置 GamePage
-                setLastAddedTreeId(null); // Reset focus ID
+                setGameKey(prev => prev + 1);
+                setLastAddedTreeId(null);
                 
-                setTimeout(() => { // 异步执行确保 DOM 更新完成
+                setTimeout(() => {
                     if (appRef.current && !isDesktop) {
-                        // 强制使用 'auto' 行为立即滚动，避免 'smooth' 导致的兼容性问题
                         appRef.current.scrollTo({ top: 0, behavior: 'auto' }); 
                     }
                 }, 0);
@@ -1755,7 +1757,6 @@
                 e.preventDefault();
                 const newView = view === 'BTT' ? 'HOME' : 'BTT';
                 setView(newView);
-                // 确保在切换到 Landing/BTT 视图时，如果不是 desktop，滚动到顶部
                 if (!isDesktop) {
                      setTimeout(() => {
                         if (appRef.current) {
@@ -1765,67 +1766,60 @@
                 }
             }, [view, isDesktop]);
             
-            // 修复：进入 Forest 视图
             const handleOpenForest = useCallback((e) => {
                 e.preventDefault();
-                setLastAddedTreeId(null); // Reset focus ID when entering manually
+                setLastAddedTreeId(null);
                 setView('FOREST');
             }, []);
 
-            // 修复：关闭 Forest Gallery 时，切换视图并滚动回顶部，重置游戏
             const handleCloseForest = useCallback(() => {
                 setView('HOME');
-                setGameKey(prev => prev + 1); // 重置 GamePage
-                setLastAddedTreeId(null); // Reset focus ID
+                setGameKey(prev => prev + 1);
+                setLastAddedTreeId(null);
                 
-                setTimeout(() => { // 异步执行确保 DOM 更新完成
+                setTimeout(() => {
                     if (appRef.current && !isDesktop) {
                         appRef.current.scrollTo({ top: 0, behavior: 'auto' }); 
                     }
                 }, 0);
             }, [isDesktop]);
 
-            // 核心修改：在保存后，直接导航到 Forest 视图并重置 GamePage
-            const saveTreeToForest = useCallback(async (dataURL, width, height) => {
-                const virtualSize = 5000;
-                const newTreeData = {
-                    "dataURL": dataURL, // 对应数据库的 "dataURL"
-                    "width": width,
-                    "height": height,
-                    "x": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
-                    "y": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
-                    "scale": 0.4 + Math.random() * 0.8,
-                    "rotation": (Math.random() - 0.5) * 30,
-                };
+            const saveTreeToForest = React.useCallback(async (dataURL, width, height) => {
+    const virtualSize = 5000;
+    const newTreeData = {
+        "dataURL": dataURL,
+        "width": width,
+        "height": height,
+        "x": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
+        "y": virtualSize / 2 + (Math.random() - 0.5) * (virtualSize * 0.4),
+        "scale": 0.4 + Math.random() * 0.8,
+        "rotation": (Math.random() - 0.5) * 30,
+    };
 
-                const { data, error } = await supabase.from('forest').insert([newTreeData]).select();
+    const { data, error } = await mySupabase.from('forest').insert([newTreeData]).select();
 
-                if (!error && data) {
-                    const savedTree = data[0];
-                    setSubmittedTrees(prev => [...prev, savedTree]);
-                    setLastAddedTreeId(savedTree.id); 
-                    setView('FOREST'); 
-                    setShowFinal(false); 
-                    setGameKey(prev => prev + 1);
-                } else {
-                    console.error("Supabase Error:", error);
-                    alert("Error: " + (error?.message || "Check console"));
-                }
-            }, []);
+    if (!error && data) {
+        setLastAddedTreeId(data[0].id);
+        setView('FOREST');
+        setShowFinal(false);
+        setGameKey(prev => prev + 1);
+    } else {
+        console.error("Supabase Error:", error);
+    }
+}, []);
 
-            // Footer Component
             const Footer = () => (
                 e('div', { 
-                    className: "w-full flex justify-between items-center text-sm md:text-base font-medium border-t-2 border-gray-900 px-8 py-3 z-30 relative bg-white flex-shrink-0" 
+                    className: "w-full flex justify-between items-center text-base md:text-lg font-medium border-t-2 md:border-t-3 border-gray-900 px-6 md:px-10 py-4 md:py-6 z-30 relative bg-white min-h-[120px] md:min-h-[140px] flex-shrink-0 gap-2" 
                 }, 
                     e('a', { 
                         href: "#about", 
-                        className: `px-4 py-2 rounded-full border-2 border-black transition font-bold text-sm md:text-base focus:outline-none ${view === 'BTT' ? 'bg-black text-white' : 'text-black hover:bg-black hover:text-white'}`,
+                        className: `px-5 md:px-7 py-2.5 md:py-3 rounded-full border-2 md:border-3 border-black transition font-bold text-sm md:text-base lg:text-lg focus:outline-none ${view === 'BTT' ? 'bg-black text-white' : 'text-black hover:bg-black hover:text-white'}`,
                         onClick: handleToggleBTT
                     }, "BTT"),
-                    e('div', { className: "flex flex-col items-center gap-1 text-gray-500 text-xs" },
+                    e('div', { className: "flex flex-col items-center gap-1 text-gray-500 text-xs md:text-sm" },
                         
-                        e('div', { className: "text-[10px] text-center mt-1" },
+                        e('div', { className: "text-[10px] md:text-xs text-center mt-1" },
                             "All images processed locally.", 
                             e('br', null), 
                             "We don't store your photos."
@@ -1833,36 +1827,28 @@
                     ),
                     e('a', { 
                         href: "#gallery", 
-                        className: "px-4 py-2 rounded-full border-2 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base focus:outline-none", 
-                        onClick: handleOpenForest 
+                        className: "px-5 md:px-7 py-2.5 md:py-3 rounded-full border-2 md:border-3 border-black text-black hover:bg-black hover:text-white transition font-bold text-sm md:text-base lg:text-lg focus:outline-none whitespace-nowrap", 
+                        onClick: handleOpenForest,
+                        style: { minWidth: 'fit-content' }
                     }, "The Forest")
                 )
             );
 
-            // 核心重构：将 ForestGallery 作为一个独立视图
             if (view === 'FOREST') {
-                // 确保 ForestGallery 占据整个视口，让它自己控制背景
-                 return e('div', { className: "w-full h-[100dvh] text-black" }, 
-                    e(ForestGallery, { 
-                       trees: submittedTrees, 
-                       onBack: handleCloseForest,
-                       setTrees: setSubmittedTrees,
-                       lastAddedTreeId: lastAddedTreeId 
-                    })
-                 );
+                 return e(ForestGallery, { 
+                    newTreeId: lastAddedTreeId,
+                    onBack: handleCloseForest
+                 });
             }
+           
 
-            // Default view (HOME or BTT) - the two-screen layout
             const mainContainerClass = `w-full h-full bg-white text-black md:flex ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar'}`;
 
             return (
                 e('div', { ref: appRef, className: mainContainerClass }, 
                     
-                    // --- SCREEN 1: Landing Page (Left Column on Desktop, Top Screen on Mobile) ---
                     e('div', { 
-                        // Desktop: w-1/2, h-full, Flex Column, Border
-                        // Mobile: w-full, h-[100dvh], Flex Column ( ensures 2-screen scroll )
-                        className: `w-full ${isDesktop ? 'md:w-1/2 h-full flex flex-col border-r-2 border-gray-900' : 'h-[100dvh] flex flex-col'} relative`,
+                        className: `w-full ${isDesktop ? 'md:w-1/2 h-full flex flex-col border-r-2 md:border-r-3 border-gray-900' : 'h-[100dvh] flex flex-col'} relative`,
                         key: "screen-landing"
                     },
                         e('div', { className: "flex-1 relative w-full h-full" }, 
@@ -1871,10 +1857,7 @@
                         e(Footer, null)
                     ),
 
-                    // --- SCREEN 2: Game Page (Right Column on Desktop, Bottom Screen on Mobile) ---
                     e('div', { 
-                        // Desktop: w-1/2, h-full
-                        // Mobile: w-full, h-[100dvh]
                         className: `${isDesktop ? 'w-1/2 h-full' : 'w-full h-[100dvh]'} relative flex-shrink-0`,
                         key: "screen-game" 
                     },
@@ -1886,7 +1869,6 @@
                         })
                     ),
                     
-                    // --- Final Poster Modal (Still a fixed overlay, handles scroll back on close) ---
                     showFinal && (
                         e(FinalPoster, {
                             pieces: finalPieces,
@@ -1906,3 +1888,4 @@
     </script>
 </body>
 </html>
+                
