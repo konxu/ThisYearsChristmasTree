@@ -1339,8 +1339,8 @@
                 img.onload = () => {
                     const containerW = containerRef.current.clientWidth;
                     
-                    const maxW = containerW * 0.4;
-                    const targetMaxW = maxW * 0.75; 
+                    const maxW = containerW * 0.25;
+                    const targetMaxW = maxW * 0.85; 
                     const scaleFactor = Math.min(1, targetMaxW / img.width);
                     
                     const pieceW = img.width * scaleFactor;
@@ -1348,6 +1348,10 @@
 
                     const startX = containerW * 0.5;
                     const startY = INITIAL_Y_POS; 
+
+                    // 物理碰撞体缩小10-15%，更贴近实际视觉边界
+                    const physicsW = pieceW * 0.7;
+                    const physicsH = pieceH * 0.7;
 
                     const body = Bodies.rectangle(
                         startX, 
@@ -1357,6 +1361,7 @@
                         {
                             ...commonPieceProps, 
                             label: 'CustomPiece',
+                            chamfer: { radius: Math.min(physicsW, physicsH) * 0.2 },
                         }
                     );
                     
